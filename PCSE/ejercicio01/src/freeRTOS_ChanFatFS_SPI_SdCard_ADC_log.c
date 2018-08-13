@@ -45,8 +45,8 @@
 
 #include <string.h>   // <= Biblioteca de manejo de Strings, ver:
 
-#include "../../ejercicio01/inc/FreeRTOSConfig.h"
-#include "../../ejercicio01/inc/sd_spi.h"   // <= su propio archivo de cabecera
+#include "../../../PCSE/ejercicio01/inc/FreeRTOSConfig.h"
+#include "../../../PCSE/ejercicio01/inc/sd_spi.h"   // <= su propio archivo de cabecera
 // https://es.wikipedia.org/wiki/String.h
 // http://www.alciro.org/alciro/Programacion-cpp-Builder_12/funciones-cadenas-caracteres-string.h_448.htm
 
@@ -54,15 +54,22 @@
 
 #define FILENAME  "Muestras.txt"
 
-#define SEPARATOR ","
+#define SEPARATOR ";"
 
 /*==================[definiciones de datos internos]=========================*/
+
+
+#define ADC_STRING_L		20
+#define MEDICION_ADC_L		6
 
 static FATFS fs;           // <-- FatFs work area needed for each volume
 static FIL fp;             // <-- File object needed for each open file
 
 static char rtcString[22];
-static char adcString[6];
+
+static char adcString[ADC_STRING_L];
+static char medicionADC [MEDICION_ADC_L];
+
 static char textToWrite[52];
 
 /*==================[definiciones de datos externos]=========================*/
@@ -236,7 +243,7 @@ static void rtcToString( char* str, rtc_t* rtc ){
    int64ToString( (rtc->year), rtcMemberString, 10 );
    // Concateno rtcString+year+" "
    strncat( rtcString, rtcMemberString, strlen(rtcMemberString) );
-   strncat( rtcString, " ", strlen(" ") );
+   strncat( rtcString, "_", strlen("_") );
 
    // "HH:MM:SS"
 
@@ -327,12 +334,12 @@ void logTask( void *taskParmPtr )
 
    // Estructura RTC
    rtc_t rtc;
-   rtc.year = 2017;
-   rtc.month = 6;
-   rtc.mday = 10;
+   rtc.year = 2018;
+   rtc.month = 8;
+   rtc.mday = 2;
    rtc.wday = 1;
-   rtc.hour = 10;
-   rtc.min = 35;
+   rtc.hour = 8;
+   rtc.min = 55;
    rtc.sec= 0;
    // Inicializar RTC
    rtcConfig( &rtc );
@@ -362,52 +369,68 @@ void logTask( void *taskParmPtr )
    // ---------- REPETIR POR SIEMPRE --------------------------
    while( TRUE )
    {
-      // Leer fecha y hora
-      rtcRead( &rtc );
-      // Convertir lectura de fecha y hora a string en formato "DD/MM/YYYY HH:MM:SS"
-      rtcToString( rtcString, &rtc );
-      // Agrego SEPARATOR al final
-      strncat( rtcString, SEPARATOR, 1 );
-      // Muestro por UART
-      debugPrintString( rtcString );
+		// Leer fecha y hora
+		rtcRead( &rtc );
+		// Convertir lectura de fecha y hora a string en formato "DD/MM/YYYY HH:MM:SS"
+		rtcToString( rtcString, &rtc );
+		// Agrego SEPARATOR al final
+		strncat( rtcString, SEPARATOR, 1 );
+		// Muestro por UART
+		debugPrintString( rtcString );
 
-      // Leer adc
-      // Se debe esperar minimo 67ms entre lecturas su la tasa es de 15Hz
-      adcValue = adcRead( CH1 );
-      // Convertir lectura del ADC a string (va a dar un valor de "0" a "1023")
-      int64ToString( (int64_t)adcValue, adcString, 10 );
-      // Agrego SEPARATOR al final
-      strncat( adcString, SEPARATOR, 1 );
-      // Muestro por UART
-      debugPrintString( adcString );
-      debugPrintEnter();
+		// Leer adc
+		// Se debe esperar minimo 67ms entre lecturas su la tasa es de 15Hz
+		adcValue = adcRead( CH1 );
+		// Convertir lectura del ADC a string (va a dar un valor de "0" a "1023")
+		int64ToString( (int64_t)adcValue, medicionADC, 10 );
+		// Agrego SEPARATOR al final
+		strcpy(adcString, medicionADC);
+		strncat( adcString, SEPARATOR, 1 );
 
-      // Concatento textToWrite con rtcString quedando en textToWrite: rtcString
-      strncat( textToWrite, rtcString, strlen(rtcString) );
-      // Concatento textToWrite con magString quedando textToWrite: rtcString+adcString
-      strncat( textToWrite, adcString, strlen(adcString) );
-      // Concatento textToWrite con "\r\n" quedando textToWrite: rtcString+adcString+"\r\n"
-      strncat( textToWrite, "\r\n", 2 );
+		adcValue = adcRead( CH2 );
+		// Convertir lectura del ADC a string (va a dar un valor de "0" a "1023")
+		int64ToString( (int64_t)adcValue, medicionADC, 10 );
+		// Agrego SEPARATOR al final
+		strcat(adcString, medicionADC);
+		strncat( adcString, SEPARATOR, 1 );
 
-      // Grabar muestra en la Tarjeta SD
-      saveStringInSDCard( textToWrite, strlen(textToWrite) );
+		adcValue = adcRead( CH3 );
+		// Convertir lectura del ADC a string (va a dar un valor de "0" a "1023")
+		int64ToString( (int64_t)adcValue, medicionADC, 10 );
+		// Agrego SEPARATOR al final
+		strcat(adcString, medicionADC);
+		strncat( adcString, SEPARATOR, 1 );
 
-      // Detengo el programa con la tecla TEC1 o si guardo 60 muestras
-      if( !gpioRead(TEC1) || (counter >= 60) ){
-         debugPrintlnString( "Log completo, puede retirar la SD." );
-         // Turn ON LEDG if program is done
-         gpioWrite( LEDG, ON );
-         stopProgram();
-      }
-      // Incremento el contador de muestras guardadas
-      counter++;
+		// Muestro por UART
+		debugPrintString( adcString );
+		debugPrintEnter();
 
-      // Reeteo variables para la proxima muestra
-      adcValue = 0;
-      textToWrite[0] = 0;
+		// Concatento textToWrite con magString quedando textToWrite: rtcString+adcString
+		strncat( textToWrite, adcString, strlen(adcString) );
+		// Concatento textToWrite con rtcString quedando en textToWrite: rtcString
+		strncat( textToWrite, rtcString, strlen(rtcString) );
+		// Concatento textToWrite con "\r\n" quedando textToWrite: rtcString+adcString+"\r\n"
+		strncat( textToWrite, "\r\n", 2 );
 
-      // Envia la tarea al estado bloqueado durante 1s para preparase para la proxima muestras
-	   vTaskDelayUntil( &xLastWakeTime, xPeriodo );
+		// Grabar muestra en la Tarjeta SD
+		saveStringInSDCard( textToWrite, strlen(textToWrite) );
+
+		// Detengo el programa con la tecla TEC1 o si guardo 60 muestras
+		if( !gpioRead(TEC1) || (counter >= 60) ){
+			debugPrintlnString( "Log completo, puede retirar la SD." );
+			// Turn ON LEDG if program is done
+			gpioWrite( LEDG, ON );
+			stopProgram();
+		}
+		// Incremento el contador de muestras guardadas
+		counter++;
+
+		// Reeteo variables para la proxima muestra
+		adcValue = 0;
+		textToWrite[0] = 0;
+
+		// Envia la tarea al estado bloqueado durante 1s para preparase para la proxima muestras
+		vTaskDelayUntil( &xLastWakeTime, xPeriodo );
    }
 
 

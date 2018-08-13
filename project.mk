@@ -34,6 +34,21 @@
 #PROJECT_PATH = examples/c/sapi/bare_metal/i2c/IMUs
 #PROJECT_NAME = mpu9250
 
-PROJECT_PATH = examples/c/sapi/bare_metal/usb
-PROJECT_NAME = usb_device_01_hid_keyboard
+# PROJECT_PATH = examples/c/sapi/bare_metal/usb
+# PROJECT_NAME = usb_device_01_hid_keyboard
 #PROJECT_NAME = usb_device_02_cdc_virtualSerialPort
+
+# -------------------- PCSE --------------------------------------
+#PROJECT_PATH = PCSE
+#PROJECT_NAME = ejercicio02_HM10
+
+# PROJECT_PATH = examples/c/sapi/bare_metal/wifi_esp01_esp8266
+# PROJECT_NAME = 03_thingspeak
+
+# -------------------- RTOS1 -----------------------------
+
+PROJECT_PATH = RTOS1
+PROJECT_NAME = ejercicio03
+
+
+
