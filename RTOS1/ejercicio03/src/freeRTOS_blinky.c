@@ -2,11 +2,11 @@
 #include "task.h"
 #include "sapi.h"
 
+#include "antirreb.h"
+
 DEBUG_PRINT_ENABLE;
 
-StackType_t myTaskStack[configMINIMAL_STACK_SIZE];
-StaticTask_t myTaskTCB;
-
+/* -------------------- defines ------------------------------ */
 
 #define TON_MIN         100
 #define TON_MAX         900
@@ -16,16 +16,23 @@ StaticTask_t myTaskTCB;
 
 #define PERIODO         1000
 
+/* -------------------- funciones ------------------------------ */
 
+void myTask( void* taskParmPtr );
 
-void myTask( void* taskParmPtr )
+/* -------------------- funciones ------------------------------ */
+
+/**
+ * @fn void myTask( void* taskParmPtr )
+ *
+ * @brief tarea que parpadea el led con tOn incremental
+ */
+void tareaLed( void* taskParmPtr )
 {
 	TickType_t tiempoInicio;
 	TickType_t tiempoBloqueo;
 
 	TickType_t tOn, tOff;
-
-
 
     gpioWrite( LED2, OFF );
 
@@ -38,6 +45,16 @@ void myTask( void* taskParmPtr )
 
     while(TRUE) {
 
+
+        if(antirreb_tecla1.t == TECLA_PRESIONADA){
+            tiempoInicio = xTaskGetTickCount();
+            antirreb_tecla1.t = TECLA_SUELTA;
+            gpioWrite(LEDG, ON);
+            vTaskDelayUntil(&tiempoInicio, antirreb_tecla1.tiempoPresionado / portTICK_RATE_MS);
+            gpioWrite(LEDG, OFF);
+        }
+        vTaskDelay(10 / portTICK_RATE_MS);
+/*
         tiempoInicio = xTaskGetTickCount();
 
         gpioWrite ( LEDR, ON );
@@ -56,17 +73,30 @@ void myTask( void* taskParmPtr )
 
         gpioWrite ( LEDR, OFF );
         gpioWrite ( GPIO1, OFF );
-
-        vTaskDelayUntil(&tiempoInicio, PERIODO / portTICK_RATE_MS);
+*/
    }
 }
+
+
+
+
+
+/**
+ * @fn funcion ppal
+ *
+ */
 
 int main(void)
 {
    boardConfig();
 
-   xTaskCreateStatic(myTask, "myTask", configMINIMAL_STACK_SIZE, NULL,
-                     tskIDLE_PRIORITY+1, myTaskStack, &myTaskTCB);
+
+   xTaskCreate(tareaLed, (const char *) "myTask", configMINIMAL_STACK_SIZE, 0,
+                     tskIDLE_PRIORITY+1UL, 0);
+
+   xTaskCreate(tareaAntirreboteTEC1, (const char*)"ANTIRREB", configMINIMAL_STACK_SIZE, 0,
+                        tskIDLE_PRIORITY+2UL, 0);
+
 
    vTaskStartScheduler();
 
