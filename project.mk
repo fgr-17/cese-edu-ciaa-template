@@ -48,7 +48,7 @@
 # -------------------- RTOS1 -----------------------------
 
 PROJECT_PATH = RTOS1
-PROJECT_NAME = ejercicio03
+PROJECT_NAME = ejercicio03bis_UART
 
 
 
