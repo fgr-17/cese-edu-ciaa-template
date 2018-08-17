@@ -44,6 +44,7 @@
 
 #include "antirreb.h"
 #include "gpio.h"
+#include "led.h"
 
 
 /*==================[definiciones y macros]==================================*/
@@ -146,17 +147,23 @@ int main(void)
    debugPrintConfigUart( UART_USB, 115200 );
    debugPrintlnString( "Blinky con freeRTOS y sAPI." );
 
-   xTaskCreate(tareaLed, (const char *) "myTask", configMINIMAL_STACK_SIZE*2, 0,
+   xTaskCreate(tareaParpadearLedG, (const char *) "tareaParpadearLedG", configMINIMAL_STACK_SIZE, 0,
                       tskIDLE_PRIORITY, 0);
-
-    xTaskCreate(tareaAntirreboteTEC1, (const char*)"AR1", configMINIMAL_STACK_SIZE*2, 0,
+   xTaskCreate(tareaParpadearLed1, (const char *) "tareaParpadearLed1", configMINIMAL_STACK_SIZE, 0,
+                         tskIDLE_PRIORITY, 0);
+    xTaskCreate(tareaAntirreboteTEC1, (const char*)"AR1", configMINIMAL_STACK_SIZE, 0,
                          tskIDLE_PRIORITY+1UL, 0);
 
-    xTaskCreate(tareaAntirreboteTEC2, (const char*)"AR2", configMINIMAL_STACK_SIZE*2, 0,
+    xTaskCreate(tareaAntirreboteTEC2, (const char*)"AR2", configMINIMAL_STACK_SIZE, 0,
+                             tskIDLE_PRIORITY+1UL, 0);
+
+    xTaskCreate(tareaActualizarPeriodoLeds, (const char*)"actualiza periodo", configMINIMAL_STACK_SIZE, 0,
                              tskIDLE_PRIORITY+1UL, 0);
 
 
     inicializarTecla();
+    inicializarQueuesTeclas();
+    inicializarQueueTeclasPresionadas();
 
    // Iniciar scheduler
    vTaskStartScheduler();

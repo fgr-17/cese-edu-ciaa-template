@@ -17,7 +17,6 @@
 #include "sapi.h"        // <= Biblioteca sAPI
 // Includes de FreeRTOS
 #include "FreeRTOS.h"
-#include "FreeRTOSConfig.h"
 #include "task.h"
 #include "semphr.h"
 
@@ -46,6 +45,8 @@ QueueHandle_t teclasQueue;
 int inicializarQueuesTeclas ( void ) {
 
   if( (teclasQueue = xQueueCreate (TECLAS_QUEUE_L, sizeof(tecQueue_t))) == NULL)   return 1;
+
+
   return 0;
 }
 
@@ -58,9 +59,6 @@ int inicializarQueuesTeclas ( void ) {
  */
 
 int inicializarTecla (void) {
-
-  /* inicializo estrucutura de queues */
-  inicializarQueuesTeclas();
 
 	/* CONFIGURO ISR (2 HANDLERS PARA EL MISMO PIN) */
 
@@ -103,6 +101,7 @@ int inicializarTecla (void) {
 
   return 0;
 }
+
 
 /**
  * @fn void GPIO0_IRQHandler(void)

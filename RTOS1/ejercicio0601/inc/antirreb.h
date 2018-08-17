@@ -15,6 +15,8 @@
 #define TECLA_ARRIBA		ON
 /** @brief periodo de muestreo de la rutina antirrebote */
 #define ANTIRREB_TS     50
+/** @brief largo de la cola de datos de teclas presionadas */
+#define TECLAS_PRESIONADAS_L      4
 
 /* ========================== [ definicion de tipos de datos ] ======================= */
 
@@ -41,6 +43,8 @@ typedef struct
 
 /* ========================== [ funciones externas ] ======================= */
 
+extern int inicializarQueueTeclasPresionadas ( void );
+
 extern void tareaAntirreboteTEC1 ( void* taskParmPtr );
 extern void tareaAntirreboteTEC2 ( void* taskParmPtr );
 
@@ -52,3 +56,6 @@ extern antirreb_t antirreb_tecla1;
 extern antirreb_t antirreb_tecla2;
 extern antirreb_t antirreb_tecla3;
 extern antirreb_t antirreb_tecla4;
+
+extern QueueHandle_t teclasPresionadas;
+

@@ -23,8 +23,18 @@ antirreb_t antirreb_tecla2;
 antirreb_t antirreb_tecla3;
 antirreb_t antirreb_tecla4;
 
+#define TECLAS_PRESIONADAS_L      4
+QueueHandle_t teclasPresionadas;
 
 /* ======================= [implementacion de funciones] ======================= */
+
+int inicializarQueueTeclasPresionadas ( void ) {
+
+  // en lugar de hacer la cola con la struct completa, solo me interesa saber que tecla y cuanto tiempo estuvo presionada
+  if( (teclasPresionadas = xQueueCreate (TECLAS_PRESIONADAS_L, sizeof(antirreb_t))) == NULL)   return 1;
+
+  return 0;
+}
 
 
 /**
@@ -160,6 +170,7 @@ void antirreboteMEF (antirreb_t*antirreb){
 				antirreb->estado = BUTTON_UP;
 	      antirreb->t = TECLA_PRESIONADA;
 	      antirreb->tiempoPresionado = antirreb->tiempoPresionFin - antirreb->tiempoPresionIni;
+	      xQueueSend(teclasPresionadas, (const void*) antirreb, portMAX_DELAY);
 			}
 
 //		}

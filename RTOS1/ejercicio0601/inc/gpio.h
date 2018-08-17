@@ -42,7 +42,7 @@ typedef struct {
 /* ---------------------- funciones globales -------------------------- */
 
 extern int inicializarTecla (void);
-
+extern int inicializarQueuesTeclas ( void );
 /* ---------------------- variables globales -------------------------- */
 
 extern QueueHandle_t teclasQueue;
