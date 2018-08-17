@@ -89,10 +89,11 @@ float ultrasonicSensorGetDistance( ultrasonicSensorMap_t aSensor, unitMap_t anUn
 /*
  * @Brief:   GPIO Echo interrupt handler for each sensor
  */
+/*
 void GPIO0_IRQHandler(void);
 void GPIO1_IRQHandler(void);
 void GPIO2_IRQHandler(void);
-
+*/
 /*==================[cplusplus]==============================================*/
 
 #ifdef __cplusplus

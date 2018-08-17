@@ -48,7 +48,7 @@
 # -------------------- RTOS1 -----------------------------
 
 PROJECT_PATH = RTOS1
-PROJECT_NAME = ejercicio03bis_UART
-
-
+# PROJECT_NAME = ejercicio06_01
+# PROJECT_NAME = RTOSejer9
+PROJECT_NAME = ejercicio0601
 
