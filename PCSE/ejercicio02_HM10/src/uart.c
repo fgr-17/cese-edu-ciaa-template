@@ -103,12 +103,14 @@ int main( void )
 
       // Si presiono TEC3 enciende el led de la pantalla de la app
       if( !gpioRead( TEC3 ) ) {
-         uartWriteString( UART_BLUETOOTH, "LED_ON\r\n" );
+         uartWriteString( UART_BLUETOOTH, "LED ON\r\n" );
+         debugPrintlnString( "LED ON\r\n");
          delay(500);
       }
       // Si presiono TEC4 apaga el led de la pantalla de la app
       if( !gpioRead( TEC4 ) ) {
-         uartWriteString( UART_BLUETOOTH, "LED_OFF\r\n" );
+         uartWriteString( UART_BLUETOOTH, "LED OFF\r\n" );
+         debugPrintlnString( "LED OFF\r\n");
          delay(500);
       }
    }

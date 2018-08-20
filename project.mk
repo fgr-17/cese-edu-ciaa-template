@@ -38,5 +38,8 @@
 #PROJECT_NAME = usb_device_01_hid_keyboard
 #PROJECT_NAME = usb_device_02_cdc_virtualSerialPort
 
-PROJECT_PATH = examples/c/sapi/bare_metal/wifi_esp01_esp8266
-PROJECT_NAME = 02_http_server
+# PROJECT_PATH = examples/c/sapi/bare_metal/wifi_esp01_esp8266
+# PROJECT_NAME = 02_http_server
+
+PROJECT_PATH = PCSE
+PROJECT_NAME = ejercicio02_HM10
