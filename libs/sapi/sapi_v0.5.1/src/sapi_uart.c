@@ -569,9 +569,10 @@ void UART0_IRQHandler(void)
 {
    uartProcessIRQ( UART_GPIO );
 }
-
+/*
 // UART2 (USB-UART) or UART_ENET
 // 0x2a 0x000000A8 - Handler for ISR UART2 (IRQ 26)
+
 void UART2_IRQHandler(void)
 {
    uartProcessIRQ( UART_USB );
@@ -579,9 +580,10 @@ void UART2_IRQHandler(void)
 
 // UART3 (RS232)
 // 0x2b 0x000000AC - Handler for ISR UART3 (IRQ 27)
+
 void UART3_IRQHandler(void)
 {
    uartProcessIRQ( UART_232 );
 }
-
+*/
 /*==================[end of file]============================================*/

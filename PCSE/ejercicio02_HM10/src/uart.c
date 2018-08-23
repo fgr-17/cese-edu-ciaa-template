@@ -74,10 +74,12 @@ int main( void )
 
    uint8_t data = 0;
 
-   uartWriteString( UART_PC, "Testeto si el modulo esta conectado enviando: AT\r\n" );
+   /*
+   uartWriteString( UART_PC, "Testeo si el modulo esta conectado enviando: AT\r\n" );
+
    if( hm10bleTest( UART_BLUETOOTH ) ){
       debugPrintlnString( "Modulo conectado correctamente." );
-   }
+   }*/
 
    // ---------- REPETIR POR SIEMPRE --------------------------
    while( TRUE ) {
@@ -127,7 +129,7 @@ int main( void )
 
 bool_t hm10bleTest( int32_t uart )
 {
-   uartWriteString( uart, "AT\r\n" );
+   uartWriteString( uart, "AT+\r\n" );
    return waitForReceiveStringOrTimeoutBlocking( uart,
                                                  "OK\r\n", strlen("OK\r\n"),
                                                  50 );

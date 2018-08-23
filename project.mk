@@ -42,4 +42,5 @@
 # PROJECT_NAME = 02_http_server
 
 PROJECT_PATH = PCSE
-PROJECT_NAME = ejercicio02_HM10
+PROJECT_NAME = testHM10
+# PROJECT_NAME = ejercicio02_HM10
