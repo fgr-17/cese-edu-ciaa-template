@@ -137,20 +137,21 @@ void tareaEnviarArrayBLE( void* taskParmPtr ) {
 
   itoa(baudrates[baudrateInicial].brate, baudrateString, 10);
 
-  strcpy(itemQueue.mensaje, "Modulo BLE inicializado en ");
+  strcpy(itemQueue.mensaje, "Modulo BLE inicializado a ");
   strcat(itemQueue.mensaje, baudrateString);
   strcat(itemQueue.mensaje, "bps\r\n");
   xQueueSend(uartPC.queueTxUART, &itemQueue, portMAX_DELAY );
 
-  //MLT_BT05_setBaudrate(BPS115200);
-
-
   xTaskCreate(tareaBLEaPC, (const char *)"BLE->PC", configMINIMAL_STACK_SIZE,(void*)0,tskIDLE_PRIORITY+1, 0);
   xTaskCreate(tareaPCaBLE, (const char *)"PC->BLE", configMINIMAL_STACK_SIZE,(void*)0,tskIDLE_PRIORITY+1, 0);
 
+  if(baudrateInicial != BPS115200)
+    MLT_BT05_setBaudrate(BPS115200);
+
+
 
   while(TRUE) {
-
+      vTaskDelay(1000);
   }
 
 }
@@ -264,34 +265,46 @@ int32_t MLT_BT05_setBaudrate (mlt_bt05_baudrate_t baudrate) {
   uartQueue_t itemQueueUartTx;
   uartQueue_t itemQueueUartRx;
   int32_t cad_l;
-  char cmd_baud[MENSAJE_L];
+  char cmdBaud[MENSAJE_L];
+  char baudrateString[7];
 
   // cad_l = MLT_BT05_armarComando(itemQueueUartTx.mensaje, strcat(MLT_BT05_CMD_BAUDRATE, BAUDRATE_BLE_CMD));
 
 //  strcpy(itemQueueUartTx.mensaje, baudrates[baudrate].cmdAT_baudrate);}
 
-  MLT_BT05_armarComando(cmd_baud, baudrates[baudrate].cmdAT_baudrate );
+  MLT_BT05_armarComando(itemQueueUartTx.mensaje, baudrates[baudrate].cmdAT_baudrate );
   xQueueSend(uartBLE.queueTxUART, &itemQueueUartTx, portMAX_DELAY);
  //      xQueueSend(uartPC.queueTxUART, &itemQueueUart, portMAX_DELAY);
 
   if(xQueueReceive(uartBLE.queueRxUART, &itemQueueUartRx, TIMEOUT_MLT_BT05_AT) == pdFALSE) {
-      strcpy(itemQueueUartTx.mensaje, "No se recibio respuesta de parte del BLE");
+      strcpy(itemQueueUartTx.mensaje, "No se recibio respuesta de parte del BLE\r\n");
       xQueueSend(uartPC.queueTxUART, &itemQueueUartTx, portMAX_DELAY);
       return -1;
   }      // pregunto si me respondió ok
 
-  uartBLE.baudrate = baudrates[baudrate].brate;
-  uartInit( uartBLE.perif, uartBLE.baudrate);
-  uartRxInterruptSet(UART_BLE, TRUE);
+  // armo string con el valor del baudrate configurado
+  itoa(baudrates[baudrate].brate, baudrateString, 10);
+  // armo el string de lo que deberia responder el BLE
+  strcpy(cmdBaud, MLT_BT05_CAMBIO_BAUDRATE_RESP1);
+  strcat(cmdBaud, baudrateString);
+  strcat(cmdBaud, MLT_BT05_CAMBIO_BAUDRATE_RESP2);
 
-  /*
-  else if(strcmp(itemQueueUartRx.mensaje, MLT_BT05_CMD_VIVO_RESP) == 0) {
-     return i;
+  if(strcmp(cmdBaud, itemQueueUartRx.mensaje) == 0) {
+    // se configuro todo correctamente
+    uartBLE.baudrate = baudrates[baudrate].brate;
+    uartInit( uartBLE.perif, uartBLE.baudrate);
+    uartRxInterruptSet(UART_BLE, TRUE);
+
+    strcpy(itemQueueUartTx.mensaje, "Modulo BLE configurado a ");
+    strcat(itemQueueUartTx.mensaje, baudrateString);
+    strcat(itemQueueUartTx.mensaje, "bps\r\n");
+    xQueueSend(uartPC.queueTxUART, &itemQueueUartTx, portMAX_DELAY);
+    return 0;
   }
   else {
-
+      strcpy(itemQueueUartTx.mensaje, "Error al configurar baudrate del BLE\r\n");
+      xQueueSend(uartPC.queueTxUART, &itemQueueUartTx, portMAX_DELAY);
+      return -2;
   }
-*/
-
 
 }

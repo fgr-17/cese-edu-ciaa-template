@@ -38,6 +38,8 @@
 #define MLT_BT05_CMD_BAUDRATE_38400           "2"
 #define MLT_BT05_CMD_BAUDRATE_19200           "3"
 #define MLT_BT05_CMD_BAUDRATE_9600            "4"
+#define MLT_BT05_CAMBIO_BAUDRATE_RESP1        "+BAUD="
+#define MLT_BT05_CAMBIO_BAUDRATE_RESP2        "\r\nOK\r\n"
 
 
 #define MLT_BT05_BAUDRATE_5   (sizeof(mlt_bt05_baudrate_t) / sizeof(mlt_bt05_baudrate_t))
