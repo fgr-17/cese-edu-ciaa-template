@@ -116,7 +116,7 @@ void tareaRecibirStringPorTimeout (void* uartN) {
             if((i + 1) > MENSAJE_L) {
                 mensajeRecibido[i] = '\0';
                 strcpy(itemQueueRx.mensaje, mensajeRecibido);
-                xQueueSend(uartCast->queueRxUART, &itemQueueRx, portMAX_DELAY);
+                xQueueSend(uartCast->queueRxUART, &itemQueueRx, 0);
                 i = 0;
             }
 
