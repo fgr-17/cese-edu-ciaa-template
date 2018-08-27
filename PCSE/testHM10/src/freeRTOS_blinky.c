@@ -39,7 +39,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
-
+#include "semphr.h"
 // sAPI header
 #include "sapi.h"
 
@@ -71,6 +71,7 @@ int main(void)
 
   // ---------- CONFIGURACIONES ------------------------------
   // Inicializar y configurar la plataforma
+
   boardConfig();
 
   /*
@@ -130,10 +131,37 @@ int main(void)
       (const char *)"UART_PC",                    // Nombre de la tarea como String amigable para el usuario
       configMINIMAL_STACK_SIZE*2,                 // Cantidad de stack de la tarea
       (void*) &uartPC,                             // Parametros de tarea
-      tskIDLE_PRIORITY+1,                         // Prioridad de la tarea
+      tskIDLE_PRIORITY+2,                         // Prioridad de la tarea
       0                                           // Puntero a la tarea creada en el sistema
    );
 
+   xTaskCreate(
+        tareaEnviarDatosUART,                      // Funcion de la tarea a ejecutar
+       (const char *)"UART_BLE",                    // Nombre de la tarea como String amigable para el usuario
+       configMINIMAL_STACK_SIZE*2,                 // Cantidad de stack de la tarea
+       (void*) &uartBLE,                             // Parametros de tarea
+       tskIDLE_PRIORITY+2,                         // Prioridad de la tarea
+       0                                           // Puntero a la tarea creada en el sistema
+    );
+
+   // Crear tarea en freeRTOS
+   xTaskCreate(
+       tareaRecibirStringPorTimeout,                      // Funcion de la tarea a ejecutar
+      (const char *)"UART RX PC",                    // Nombre de la tarea como String amigable para el usuario
+      configMINIMAL_STACK_SIZE*2,                 // Cantidad de stack de la tarea
+      (void*) &uartPC,                             // Parametros de tarea
+      tskIDLE_PRIORITY+3,                         // Prioridad de la tarea
+      0                                           // Puntero a la tarea creada en el sistema
+   );
+
+   xTaskCreate(
+          tareaRecibirStringPorTimeout,                      // Funcion de la tarea a ejecutar
+         (const char *)"UART RX BLE",                    // Nombre de la tarea como String amigable para el usuario
+         configMINIMAL_STACK_SIZE*2,                 // Cantidad de stack de la tarea
+         (void*) &uartBLE,                             // Parametros de tarea
+         tskIDLE_PRIORITY+3,                         // Prioridad de la tarea
+         0                                           // Puntero a la tarea creada en el sistema
+      );
 
 
 

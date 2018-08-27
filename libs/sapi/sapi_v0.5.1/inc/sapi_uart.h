@@ -71,8 +71,17 @@ typedef struct{
    delay_t  delay;
 } waitForReceiveStringOrTimeout_t;
 
-/*==================[external data declaration]==============================*/
 
+
+typedef struct {
+   LPC_USART_T*      uartAddr;
+   lpc4337ScuPin_t   txPin;
+   lpc4337ScuPin_t   rxPin;
+   IRQn_Type         uartIrqAddr;
+} uartLpcInit_t;
+
+/*==================[external data declaration]==============================*/
+extern const uartLpcInit_t lpcUarts[];
 /*==================[external functions declaration]=========================*/
 
 // Check for Receive a given pattern

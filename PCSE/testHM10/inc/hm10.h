@@ -13,7 +13,7 @@
 #define UART_PC        UART_USB
 #define UART_BLE      UART_232
 
-#define UART_PC_BAUDRATE            9600
+#define UART_PC_BAUDRATE            115200
 #define UART_BLE_BAUDRATE         9600
 
 /*==================[tipos de dato]====================*/
@@ -29,7 +29,7 @@ typedef union {
 
 /*==================[declaraciones de funciones externas]====================*/
 
-extern void tareaEnviarArrayBLE( void* taskParmPtr );
+// extern void tareaEnviarArrayBLE( void* taskParmPtr );
 
 extern bool_t hm10bleTest( uartMap_t uart );
 extern void hm10blePrintATCommands( uartMap_t uart );

@@ -46,13 +46,6 @@
 
 /*==================[typedef]================================================*/
 
-typedef struct {
-   LPC_USART_T*      uartAddr;
-   lpc4337ScuPin_t   txPin;
-   lpc4337ScuPin_t   rxPin;
-   IRQn_Type         uartIrqAddr;
-} uartLpcInit_t;
-
 /*==================[internal data declaration]==============================*/
 
 static volatile callBackFuncPtr_t rxIsrCallbackUART0 = 0;
@@ -63,7 +56,7 @@ static volatile callBackFuncPtr_t txIsrCallbackUART0 = 0;
 static volatile callBackFuncPtr_t txIsrCallbackUART2 = 0;
 static volatile callBackFuncPtr_t txIsrCallbackUART3 = 0;
 
-static const uartLpcInit_t lpcUarts[] = {
+const uartLpcInit_t lpcUarts[] = {
 // { uartAddr, { txPort, txpin, txfunc }, { rxPort, rxpin, rxfunc }, uartIrqAddr  },
    // UART_GPIO (GPIO1 = U0_TXD, GPIO2 = U0_RXD)
    { LPC_USART0, { 6, 4, FUNC2 }, { 6, 5, FUNC2 }, USART0_IRQn }, // 0
@@ -374,7 +367,7 @@ void uartRxInterruptSet( uartMap_t uart, bool_t enable )
       // Enable UART Receiver Buffer Register Interrupt
       Chip_UART_IntEnable( lpcUarts[uart].uartAddr, UART_IER_RBRINT );
       // Enable UART line status interrupt. LPC43xx User manual page 1118
-      //NVIC_SetPriority( lpcUarts[uart].uartIrqAddr, 6 );
+      NVIC_SetPriority( lpcUarts[uart].uartIrqAddr, 0x07);
       // Enable Interrupt for UART channel
       NVIC_EnableIRQ( lpcUarts[uart].uartIrqAddr );
    } else {
@@ -569,21 +562,21 @@ void UART0_IRQHandler(void)
 {
    uartProcessIRQ( UART_GPIO );
 }
-/*
-// UART2 (USB-UART) or UART_ENET
-// 0x2a 0x000000A8 - Handler for ISR UART2 (IRQ 26)
 
-void UART2_IRQHandler(void)
-{
-   uartProcessIRQ( UART_USB );
-}
+//// UART2 (USB-UART) or UART_ENET
+//// 0x2a 0x000000A8 - Handler for ISR UART2 (IRQ 26)
+//
+//void UART2_IRQHandler(void)
+//{
+//   uartProcessIRQ( UART_USB );
+//}
+//
+//// UART3 (RS232)
+//// 0x2b 0x000000AC - Handler for ISR UART3 (IRQ 27)
+//
+//void UART3_IRQHandler(void)
+//{
+//   uartProcessIRQ( UART_232 );
+//}
 
-// UART3 (RS232)
-// 0x2b 0x000000AC - Handler for ISR UART3 (IRQ 27)
-
-void UART3_IRQHandler(void)
-{
-   uartProcessIRQ( UART_232 );
-}
-*/
 /*==================[end of file]============================================*/

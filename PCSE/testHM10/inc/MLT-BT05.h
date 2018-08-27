@@ -13,6 +13,7 @@
 
 /** @brief prefijo y sufijo para todos los parametros */
 #define MLT_BT05_PREFIJO        "AT"
+#define MLT_BT05_CONC           "+"
 #define MLT_BT05_SUFIJO         "\r\n"
 
 /** @brief comando para ver si esta vivo - NADA */
@@ -38,20 +39,38 @@
 #define MLT_BT05_CMD_BAUDRATE_19200           "3"
 #define MLT_BT05_CMD_BAUDRATE_9600            "4"
 
+
 #define MLT_BT05_BAUDRATE_5   (sizeof(mlt_bt05_baudrate_t) / sizeof(mlt_bt05_baudrate_t))
+
+
+#define  BAUDRATE_BLE_CMD                     MLT_BT05_CMD_BAUDRATE_115200
+
+// timeout que espero para recibir la respuesta a un comando AT
+#define TIMEOUT_MLT_BT05_AT                   100
 
 /* --------------------------- tipos de dato ---------------------------------- */
 
-typedef enum {BPS115200, BPS57600, BPS38400, BPS19200, BPS9600, BPS_ERROR} mlt_bt05_baudrate_t;
+typedef enum {BPS9600, BPS19200, BPS38400, BPS57600, BPS115200, BPS_ERROR} mlt_bt05_baudrate_t;
+
+#define BAUDRATE_L          (sizeof(baudrates) / sizeof(MLTBT05_Baudrate_t))
+#define BAUDRATE_CMD_L      10
+
+typedef struct {
+  int32_t brate;
+  char cmdAT_baudrate[BAUDRATE_CMD_L];
+} MLTBT05_Baudrate_t;
 
 /* --------------------------- funciones externas ---------------------------------- */
 
 extern int32_t MLT_BT05_armarComando (char*cad, const char*cmd);
 extern mlt_bt05_baudrate_t MLT_BT05_inicializar (uartMap_t uart);
-
+extern void tareaEnviarArrayBLE( void* taskParmPtr );
+extern int32_t MLT_BT05_setBaudrate (mlt_bt05_baudrate_t baudrate);
 /* --------------------------- variables globales ---------------------------------- */
 
 extern uint32_t mlt_bt05_baudrate [];
+
+extern MLTBT05_Baudrate_t baudrates[];
 
 
 
