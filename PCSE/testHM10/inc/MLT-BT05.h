@@ -50,10 +50,14 @@
 
 /* --------------------------- tipos de dato ---------------------------------- */
 
-typedef enum {BPS9600, BPS19200, BPS38400, BPS57600, BPS115200, BPS_ERROR} mlt_bt05_baudrate_t;
+typedef enum {BPS1200, BPS2400, BPS4800, BPS9600, BPS19200, BPS38400, BPS57600, BPS115200, BPS_ERROR} mlt_bt05_baudrate_t;
 
 #define BAUDRATE_L          (sizeof(baudrates) / sizeof(MLTBT05_Baudrate_t))
 #define BAUDRATE_CMD_L      10
+
+// velocidad por la que empiezo probando
+#define BPS_DEFAULT         BPS9600
+#define BPS_INICIO_BARRIDO  BPS1200
 
 typedef struct {
   int32_t brate;

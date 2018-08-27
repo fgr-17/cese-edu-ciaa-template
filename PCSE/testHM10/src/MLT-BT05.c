@@ -36,26 +36,38 @@ int32_t MLT_BT05_setBaudrate (mlt_bt05_baudrate_t baudrate);
 
 MLTBT05_Baudrate_t baudrates [] = {
 
-    {
-        .brate = 9600,
-        .cmdAT_baudrate = "BAUD4"
-    },
-    {
-        .brate = 19200,
-        .cmdAT_baudrate = "BAUD3"
-    },
-    {
-        .brate = 38400,
-        .cmdAT_baudrate = "BAUD2"
-    },
-    {
-        .brate = 57600,
-        .cmdAT_baudrate = "BAUD1"
-    },
-    {
-        .brate = 115200,
-        .cmdAT_baudrate = "BAUD0"
-    }
+  {
+    .brate = 1200,
+    .cmdAT_baudrate = "BAUD1"
+  },
+  {
+    .brate = 2400,
+    .cmdAT_baudrate = "BAUD2"
+  },
+  {
+    .brate = 4800,
+    .cmdAT_baudrate = "BAUD3"
+  },
+  {
+    .brate = 9600,
+    .cmdAT_baudrate = "BAUD4"
+  },
+  {
+    .brate = 19200,
+    .cmdAT_baudrate = "BAUD5"
+  },
+  {
+    .brate = 38400,
+    .cmdAT_baudrate = "BAUD6"
+  },
+  {
+    .brate = 57600,
+    .cmdAT_baudrate = "BAUD7"
+  },
+  {
+    .brate = 115200,
+    .cmdAT_baudrate = "BAUD8"
+  }
 };
 
 
@@ -164,7 +176,29 @@ mlt_bt05_baudrate_t MLT_BT05_inicializar (uartMap_t uart) {
   int32_t cad_l;
 
   cad_l = MLT_BT05_armarComando(itemQueueUartTx.mensaje, MLT_BT05_CMD_VIVO);
-  i = BPS9600;
+  i = BPS_DEFAULT;
+
+  uartBLE.baudrate = baudrates[i].brate;
+  uartInit( uartBLE.perif, uartBLE.baudrate);
+  uartRxInterruptSet(UART_BLE, TRUE);
+
+  //   uartWriteString( uart, cad);
+
+  xQueueSend(uartBLE.queueTxUART, &itemQueueUartTx, portMAX_DELAY);
+//      xQueueSend(uartPC.queueTxUART, &itemQueueUart, portMAX_DELAY);
+
+  if(xQueueReceive(uartBLE.queueRxUART, &itemQueueUartRx, TIMEOUT_MLT_BT05_AT) == pdFALSE) {
+      //      xQueueSend(uartPC.queueTxUART, &itemQueueUart, portMAX_DELAY);
+  }      // pregunto si me respondió ok
+  else if(strcmp(itemQueueUartRx.mensaje, MLT_BT05_CMD_VIVO_RESP) == 0) {
+      return i;
+  }
+  else {
+
+  }
+
+  i = BPS_INICIO_BARRIDO;
+
   // for (i = BPS9600; i > 0; i--) {
   while(i != BPS_ERROR) {
 
@@ -188,7 +222,7 @@ mlt_bt05_baudrate_t MLT_BT05_inicializar (uartMap_t uart) {
 
       }
 
-      i--;
+      i++;
   }
   return i;
 
