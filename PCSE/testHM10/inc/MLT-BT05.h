@@ -67,11 +67,12 @@ typedef struct {
 } MLTBT05_Baudrate_t;
 
 /* --------------------------- funciones externas ---------------------------------- */
-
 extern int32_t MLT_BT05_armarComando (char*cad, const char*cmd);
 extern mlt_bt05_baudrate_t MLT_BT05_inicializar (uartMap_t uart);
-extern void tareaEnviarArrayBLE( void* taskParmPtr );
 extern int32_t MLT_BT05_setBaudrate (mlt_bt05_baudrate_t baudrate);
+
+
+
 /* --------------------------- variables globales ---------------------------------- */
 
 extern uint32_t mlt_bt05_baudrate [];

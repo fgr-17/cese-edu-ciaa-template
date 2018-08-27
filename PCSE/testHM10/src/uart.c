@@ -24,6 +24,11 @@
 /* ---------------------------- prototipos --------------------------------- */
 int32_t inicializarStructUart (uart_t*uart, uartMap_t perif, uint32_t baudrate);
 int32_t inicializarTareaEnviarDatosUARTs ( void );
+
+int32_t configurarUARTModoUmbral ( uart_t*uartN);
+int32_t configurarUARTModoBytes ( uart_t*uartN);
+
+
 void tareaEnviarDatosUART ( void* taskParmPtr );
 void tareaRecibirStringPorTimeout (void* uartN);
 
@@ -156,24 +161,58 @@ int32_t inicializarStructUart (uart_t*uart, uartMap_t perif, uint32_t baudrate) 
 
 int32_t inicializarTareaEnviarDatosUARTs ( void ) {
 
-
   inicializarStructUart(&uartPC, UART_PC, UART_PC_BAUDRATE);
   uartInit( uartPC.perif, uartPC.baudrate);
- /* Chip_UART_SetupFIFOS( lpcUarts[uartPC.perif].uartAddr,
-                        UART_FCR_FIFO_EN |
-                        UART_FCR_TX_RS   |
-                        UART_FCR_RX_RS   |
-                        UART_FCR_TRG_LEV1 );
-*/
   uartRxInterruptSet(UART_PC, TRUE);
-
 
   inicializarStructUart(&uartBLE, UART_BLE, UART_BLE_BAUDRATE);
   uartInit( uartBLE.perif, uartBLE.baudrate);
   uartRxInterruptSet(UART_BLE, TRUE);
 
-
   return 0;
+}
+/**
+ * @fn int32_t configurarUARTModoUmbral ( uart_t*uartN)
+ *
+ * @brief entro a modo umbral
+ */
+
+int32_t configurarUARTModoUmbral ( uart_t*uartN) {
+
+  taskENTER_CRITICAL();
+  // Deshabilito la IRQ
+  uartRxInterruptSet(uartN->perif, FALSE);
+  // SETEO FIFO PARA QUE INTERRUMPA CON 4 BYTES
+  Chip_UART_SetupFIFOS( lpcUarts[uartN->perif].uartAddr,
+                          UART_FCR_FIFO_EN |
+                          UART_FCR_TX_RS   |
+                          UART_FCR_RX_RS   |
+                          UART_FCR_TRG_LEV1 );
+  uartRxInterruptSet(uartN->perif, TRUE);
+  uartN->modo = MODO_UMBRAL;
+  taskEXIT_CRITICAL();
+}
+
+/**
+ * @fn int32_t configurarUARTModoUmbral ( uart_t*uartN)
+ *
+ * @brief entro a modo umbral
+ */
+
+int32_t configurarUARTModoBytes ( uart_t*uartN) {
+
+  taskENTER_CRITICAL();
+  // Deshabilito la IRQ
+  uartRxInterruptSet(uartN->perif, FALSE);
+  // SETEO FIFO PARA QUE INTERRUMPA CON 4 BYTES
+  Chip_UART_SetupFIFOS( lpcUarts[uartN->perif].uartAddr,
+                          UART_FCR_FIFO_EN |
+                          UART_FCR_TX_RS   |
+                          UART_FCR_RX_RS   |
+                          UART_FCR_TRG_LEV0 );
+  uartRxInterruptSet(uartN->perif, TRUE);
+  uartN->modo = MODO_BYTES;
+  taskEXIT_CRITICAL();
 }
 
 /**

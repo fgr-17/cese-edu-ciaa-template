@@ -28,6 +28,9 @@
 
 CONSOLE_PRINT_ENABLE
 
+/* --------------------------- tareas ---------------------------------- */
+/* --------------------------- funciones ---------------------------------- */
+
 mlt_bt05_baudrate_t MLT_BT05_inicializar (uartMap_t uart);
 int32_t MLT_BT05_armarComando (char*cad, const char*cmd);
 int32_t MLT_BT05_setBaudrate (mlt_bt05_baudrate_t baudrate);
@@ -72,89 +75,6 @@ MLTBT05_Baudrate_t baudrates [] = {
 
 
 /* --------------------------- funciones ---------------------------------- */
-
-/**
- * @fn void tareaPCaBLE( void* taskParmPtr )
- *
- * @brief caño de la pc al ble
- *
- */
-
-void tareaBLEaPC( void* taskParmPtr ) {
-
-  uartQueue_t itemQueue;
-  while(TRUE) {
-
-      xQueueReceive(uartBLE.queueRxUART, &itemQueue, portMAX_DELAY );
-      xQueueSend(uartPC.queueTxUART, &itemQueue, portMAX_DELAY );
-
-  }
-}
-
-/**
- * @fn void tareaBLEaPC( void* taskParmPtr )
- *
- * @brief caño del ble a la pc
- *
- */
-
-void tareaPCaBLE( void* taskParmPtr ) {
-
-  uartQueue_t itemQueue;
-  while(TRUE) {
-
-      xQueueReceive(uartPC.queueRxUART, &itemQueue, portMAX_DELAY );
-      xQueueSend(uartBLE.queueTxUART, &itemQueue, portMAX_DELAY );
-
-  }
-}
-
-
-
-
-
-/**
- * @fn void tareaEnviarArrayBLE( void* taskParmPtr )
- *
- * @brief mando mensajes d inicializacion
- *
- */
-
-void tareaEnviarArrayBLE( void* taskParmPtr ) {
-
-  uartQueue_t itemQueue;
-  mlt_bt05_baudrate_t baudrateInicial;
-
-  char baudrateString[7];
-
-  baudrateInicial = MLT_BT05_inicializar(uartBLE.perif);
-
-  if( baudrateInicial == BPS_ERROR) {
-      strcpy(itemQueue.mensaje, "Error al inicializar el modulo BLE\r\n");
-      xQueueSend(uartPC.queueTxUART, &itemQueue, portMAX_DELAY );
-      configASSERT(0);
-  }
-
-  itoa(baudrates[baudrateInicial].brate, baudrateString, 10);
-
-  strcpy(itemQueue.mensaje, "Modulo BLE inicializado a ");
-  strcat(itemQueue.mensaje, baudrateString);
-  strcat(itemQueue.mensaje, "bps\r\n");
-  xQueueSend(uartPC.queueTxUART, &itemQueue, portMAX_DELAY );
-
-  xTaskCreate(tareaBLEaPC, (const char *)"BLE->PC", configMINIMAL_STACK_SIZE,(void*)0,tskIDLE_PRIORITY+1, 0);
-  xTaskCreate(tareaPCaBLE, (const char *)"PC->BLE", configMINIMAL_STACK_SIZE,(void*)0,tskIDLE_PRIORITY+1, 0);
-
-  if(baudrateInicial != BPS115200)
-    MLT_BT05_setBaudrate(BPS115200);
-
-
-
-  while(TRUE) {
-      vTaskDelay(1000);
-  }
-
-}
 
 /**
  * @fn mlt_bt05_baudrate_t MLT_BT05_inicializar (uart_t uart);

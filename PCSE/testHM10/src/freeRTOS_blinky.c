@@ -48,6 +48,7 @@
 
 #include "hm10.h"
 #include "MLT-BT05.h"
+#include "app.h"
 /*==================[definiciones y macros]==================================*/
 
 DEBUG_PRINT_ENABLE
@@ -117,8 +118,8 @@ int main(void)
 
    // Crear tarea en freeRTOS
    xTaskCreate(
-       tareaEnviarArrayBLE,                       // Funcion de la tarea a ejecutar
-      (const char *)"EnviarArrayBLE",             // Nombre de la tarea como String amigable para el usuario
+       tareaInicializarSistema,                       // Funcion de la tarea a ejecutar
+      (const char *)"InicioSistema",             // Nombre de la tarea como String amigable para el usuario
       configMINIMAL_STACK_SIZE*2,                 // Cantidad de stack de la tarea
       0,                                          // Parametros de tarea
       tskIDLE_PRIORITY+2,                         // Prioridad de la tarea

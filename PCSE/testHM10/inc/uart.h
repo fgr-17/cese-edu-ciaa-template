@@ -44,6 +44,11 @@ typedef struct {
 extern char* itoa(int value, char* result, int base);
 extern int32_t inicializarStructUart (uart_t*uart, uartMap_t perif, uint32_t baudrate);
 extern int32_t inicializarTareaEnviarDatosUARTs ( void );
+
+extern int32_t configurarUARTModoUmbral ( uart_t*uartN);
+extern int32_t configurarUARTModoBytes ( uart_t*uartN);
+
+
 extern void tareaEnviarDatosUART ( void* uartN );
 extern void tareaRecibirStringPorTimeout (void* uartN);
 
