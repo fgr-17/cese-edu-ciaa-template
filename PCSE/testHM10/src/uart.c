@@ -1,12 +1,11 @@
-/*
- * uart.c
+/**
+ * @file uart.c
  *
- *  Created on: 17 ago. 2018
- *      Author: froux
+ * @date 17 ago. 2018
+ * @author froux
  */
 
 /* ---------------------------- includes --------------------------------- */
-
 
 #include "stdint.h"
 #include "string.h"
@@ -22,6 +21,7 @@
 #include "uart.h"
 
 /* ---------------------------- prototipos --------------------------------- */
+
 int32_t inicializarStructUart (uart_t*uart, uartMap_t perif, uint32_t baudrate);
 int32_t inicializarTareaEnviarDatosUARTs ( void );
 

@@ -40,20 +40,6 @@ int32_t hm10bleImprimirArray (uartMap_t uart, uint16_t*array, uint32_t n);
 bool_t hm10bleTest( uartMap_t uart );
 void hm10blePrintATCommands( uartMap_t uart );
 
-/*==================[variables globales]====================*/
-
-uint16_t arrayDatos [] = {
-  #include "sgn1.h"
-};
-
-uint16_t abcdario[] = {
-    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o',
-    'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
-};
-
-#define ARRAY_DATOS_L   (sizeof(arrayDatos) / sizeof(uint16_t))
-#define ABCDARIO_L    (sizeof(abcdario) / sizeof(uint16_t))
-
 /*==================[definiciones de funciones externas]=====================*/
 
 
@@ -162,14 +148,10 @@ void hm10blePrintATCommands( uartMap_t uart )
 int32_t hm10bleImprimirArray (uartMap_t uart, uint16_t*array, uint32_t n) {
 
   uint32_t i;
-  static uartWord_Byte_t envio;
 
   for ( i = 0; i < n; i++) {
 
-      envio.word = array[i];
 
-      uartWriteByte ( uart, envio.bytes[0]);
-      uartWriteByte ( uart, envio.bytes[1]);
   }
 
   return 0;

@@ -19,12 +19,6 @@
 /*==================[tipos de dato]====================*/
 
 
-typedef union {
-
-  uint16_t word;
-  uint8_t bytes[2];
-
-} uartWord_Byte_t;
 
 
 /*==================[declaraciones de funciones externas]====================*/

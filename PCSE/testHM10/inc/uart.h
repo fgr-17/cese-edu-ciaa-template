@@ -19,13 +19,15 @@
 
 /* ---------------------------- tipo uart --------------------------------- */
 
+/** @brief modos de funcionamiento de la irq de la uart */
+typedef enum {MODO_BYTES, MODO_UMBRAL} uartModo_t;
+
+/** @brief item de la cola de datos para la uart */
 typedef struct {
   char mensaje[MENSAJE_L];
 } uartQueue_t;
 
-
-typedef enum {MODO_BYTES, MODO_UMBRAL} uartModo_t;
-
+/** @brief  tipo de dato para el manejo general de uart. */
 typedef struct {
   uartMap_t perif;
   uint32_t baudrate;
@@ -34,8 +36,6 @@ typedef struct {
   QueueHandle_t queueRxStringUART;
   SemaphoreHandle_t semaphoreInicioIRQ;
   uartModo_t modo;
-
-
 }uart_t;
 
 /* ---------------------------- prototipos --------------------------------- */
