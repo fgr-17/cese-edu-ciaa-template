@@ -38,6 +38,15 @@ typedef struct {
   uartModo_t modo;
 }uart_t;
 
+
+/** @brief union para convertir bytes<->words */
+typedef union {
+
+  uint16_t word;
+  uint8_t bytes[2];
+
+} uartWord_Byte_t;
+
 /* ---------------------------- prototipos --------------------------------- */
 
 

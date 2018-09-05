@@ -28,7 +28,7 @@
 
 /* --------------------------- variables ---------------------------------- */
 
-estadoApp_t estadoApp;
+estadoApp_t estadoGeneral;
 estadoAplicacionBLE_t estadoAplicacionBLE;
 
 QueueHandle_t queueADC;
@@ -37,6 +37,7 @@ TaskHandle_t pTareaPCaBLE;
 TaskHandle_t pTareaBLEaPC;
 TaskHandle_t pTareaSimularMuestreo;
 TaskHandle_t pTareaAplicacionBLE;
+TaskHandle_t pTareaEnviarBufferADC;
 
 /** ==================[ funciones ]====================*/
 
@@ -49,7 +50,7 @@ int8_t  validarPaquete (uartQueue_t itemQueue, paq_t* paq);
 int8_t  armarPaqueteRespuestaComando (uartQueue_t*itemQueue, cmd_t cmd, resp_t respuesta);
 
 /** ==================[ tarea ]====================*/
-
+void tareaEnviarBufferADC ( void*taskParam );
 void tareaSimularMuestreo ( void*taskParam );
 int32_t inicializarAplicacionBLE( void );
 void tareaAplicacionBLE ( void* taskParmPtr );
@@ -82,13 +83,10 @@ uint16_t abcdario[] = {
 void salirModoPasamanos ( void ) {
 
   uartQueue_t itemQueue;
-  taskENTER_CRITICAL();
-
-  configurarUARTModoBytes(&uartPC);
-  configurarUARTModoBytes(&uartBLE);
 
   strcpy(itemQueue.mensaje, "Salgo de modo pasamanos\r\n");
   xQueueSend(uartPC.queueTxUART, &itemQueue, portMAX_DELAY );
+  vTaskDelay(100);
 
   taskENTER_CRITICAL();
   vTaskSuspend(pTareaBLEaPC);
@@ -111,13 +109,12 @@ void ingresarModoPasamanos ( void ) {
   uartQueue_t itemQueue;
 
   //xTaskSuspend();
-
-
   configurarUARTModoBytes(&uartPC);
   configurarUARTModoBytes(&uartBLE);
 
   strcpy(itemQueue.mensaje, "Ingreso a modo pasamanos\r\n");
   xQueueSend(uartPC.queueTxUART, &itemQueue, portMAX_DELAY );
+  vTaskDelay(100);
 
   taskENTER_CRITICAL();
   if(primerIngreso) {
@@ -126,8 +123,8 @@ void ingresarModoPasamanos ( void ) {
     xTaskCreate(tareaPCaBLE, (const char *)"PC->BLE", configMINIMAL_STACK_SIZE,(void*)0,tskIDLE_PRIORITY+1, (TaskHandle_t*const) &pTareaPCaBLE);
   }
   else {
-    vTaskResume(tareaBLEaPC);
-    vTaskResume(tareaPCaBLE);
+    vTaskResume(pTareaBLEaPC);
+    vTaskResume(pTareaPCaBLE);
   }
 
   taskEXIT_CRITICAL();
@@ -147,15 +144,15 @@ void ingresarModoPasamanos ( void ) {
 void salirModoComando ( void ) {
 
   uartQueue_t itemQueue;
-  configurarUARTModoBytes(&uartPC);
-  configurarUARTModoBytes(&uartBLE);
 
   strcpy(itemQueue.mensaje, "Salgo de modo comando\r\n");
   xQueueSend(uartPC.queueTxUART, &itemQueue, portMAX_DELAY );
+  vTaskDelay(100);
 
   taskENTER_CRITICAL();
   vTaskSuspend(pTareaSimularMuestreo);
   vTaskSuspend(pTareaAplicacionBLE);
+  vTaskSuspend(pTareaEnviarBufferADC);
   taskEXIT_CRITICAL();
   return;
 }
@@ -172,27 +169,28 @@ void ingresarModoComando ( void ) {
 
   uartQueue_t itemQueue;
 
-  taskENTER_CRITICAL();
-
   strcpy(itemQueue.mensaje, "Ingreso a modo Comando\r\n");
   xQueueSend(uartPC.queueTxUART, &itemQueue, portMAX_DELAY );
-
-  vTaskDelay(500);
+  vTaskDelay(100);
 
   configurarUARTModoUmbral(&uartPC);
   configurarUARTModoUmbral(&uartBLE);
 
+  taskENTER_CRITICAL();
   if(primerIngreso) {
     xTaskCreate(tareaSimularMuestreo, (const char *)"Muestreo", configMINIMAL_STACK_SIZE,(void*)0,tskIDLE_PRIORITY+1, (TaskHandle_t*const) &pTareaSimularMuestreo);
     xTaskCreate(tareaAplicacionBLE, (const char *)"appBLE", configMINIMAL_STACK_SIZE,(void*)0,tskIDLE_PRIORITY+1, (TaskHandle_t*const) &pTareaAplicacionBLE);
+    xTaskCreate(tareaEnviarBufferADC, (const char *)"envioADC", configMINIMAL_STACK_SIZE,(void*)0,tskIDLE_PRIORITY+1, (TaskHandle_t*const) &pTareaEnviarBufferADC);
+
+
     primerIngreso = 0;
   }
   else {
-      vTaskResume(tareaSimularMuestreo);
-      vTaskResume(tareaAplicacionBLE);
+    vTaskResume(pTareaSimularMuestreo);
+    vTaskResume(pTareaAplicacionBLE);
+    vTaskResume(pTareaEnviarBufferADC);
+
   }
-
-
   taskEXIT_CRITICAL();
 
   return;
@@ -213,13 +211,14 @@ int8_t  validarPaquete (uartQueue_t itemQueue, paq_t* paq) {
 
   chksum = 0;
 
-  for ( i = 0; i < MENSAJE_L; i++ ) {
+  for ( i = 0; i < BYTES_PAQ; i++ ) {
 
       paq->bytes[i] = itemQueue.mensaje[i];
       chksum ^= paq->bytes[i];
   }
 
-  return chksum;
+  // return chksum;
+  return 0;
 
 }
 
@@ -264,6 +263,64 @@ int8_t  armarPaqueteRespuestaComando (uartQueue_t*itemQueue, cmd_t cmd, resp_t r
 
 
 /* --------------------------- tareas e instaladores : ---------------------------------- */
+
+
+/**
+ * @fn void tareaEnviarBufferADC ( void )
+ *
+ * @brief tarea que recibe queue del ADC y la tira a la uart
+ *
+ */
+
+/** @brief tamaño de los paquetes en BLE */
+#define TAM_PAQ_BLE       20
+
+void tareaEnviarBufferADC ( void*taskParam ) {
+
+  uartWord_Byte_t word_byte;
+  uartQueue_t itemQueue;
+  itemQueueADC_t itemQueueADC;
+  int32_t iPaqBLE, iADC;
+
+
+  while(TRUE) {
+
+      if((estadoGeneral == MODO_CMD) && (estadoAplicacionBLE == ENVIO_DATOS)) {
+
+          xQueueReceive(queueADC, &itemQueueADC, portMAX_DELAY);
+
+          iADC = 0;
+          while(iADC < BUF_ADC_L) {
+
+            // procesamiento
+            for (iPaqBLE = 0; iPaqBLE < TAM_PAQ_BLE; iPaqBLE++) {
+                word_byte.word = (uint16_t)*itemQueueADC.pEnvio;
+                itemQueue.mensaje[iPaqBLE] = word_byte.bytes[0];
+                iPaqBLE++;
+                itemQueue.mensaje[iPaqBLE] = word_byte.bytes[1];
+                itemQueueADC.pEnvio++;
+
+                iADC++;
+
+                if(iADC > BUF_ADC_L)
+                  break;
+            }
+            // mando de a paquetes de 20
+            xQueueSend(uartBLE.queueTxUART, &itemQueue, portMAX_DELAY);
+            vTaskDelay(1);
+          }
+      }
+      else {
+
+          vTaskDelay (2000);
+
+      }
+
+
+  }
+
+
+}
 
 
 /**
@@ -321,6 +378,9 @@ void tareaSimularMuestreo ( void*taskParam ) {
 
 }
 
+
+
+
 /**
  * @fn int32_t inicializarAplicacionBLE( void )
  *
@@ -361,7 +421,7 @@ void tareaAplicacionBLE ( void* taskParmPtr ) {
 
   while ( TRUE ) {
 
-      if(estadoApp == MODO_CMD)
+      if(estadoGeneral == MODO_CMD)
       {
           xQueueReceive(uartBLE.queueRxUART, &itemQueue, portMAX_DELAY );
 
@@ -374,12 +434,12 @@ void tareaAplicacionBLE ( void* taskParmPtr ) {
                 if(paqueteValidado.frame.cmd == LOGIN) {
                     armarPaqueteRespuestaComando(&itemQueue, paqueteValidado.frame.cmd, RESP_OK);
                     xQueueSend(uartBLE.queueTxUART, &itemQueue, portMAX_DELAY);
-                    estadoApp = ESPERANDO_USUARIO;
+                    estadoAplicacionBLE = ESPERANDO_USUARIO;
                 }
                 else {
                     armarPaqueteRespuestaComando(&itemQueue, paqueteValidado.frame.cmd, RESP_ERR_CMD);
                     xQueueSend(uartBLE.queueTxUART, &itemQueue, portMAX_DELAY);
-                    estadoApp = ESPERANDO_LOGIN;
+                    estadoAplicacionBLE = ESPERANDO_LOGIN;
                 }
                 break;
 
@@ -390,12 +450,12 @@ void tareaAplicacionBLE ( void* taskParmPtr ) {
                     xQueueSend(uartBLE.queueTxUART, &itemQueue, portMAX_DELAY);
                     usuario.bytes[1] = paqueteValidado.bytes[1];
                     usuario.bytes[0] = paqueteValidado.bytes[0];
-                    estadoApp = ESPERO_HYF;
+                    estadoAplicacionBLE = ESPERO_HYF;
                 }
                 else {
                     armarPaqueteRespuestaComando(&itemQueue, paqueteValidado.frame.cmd, RESP_ERR_CMD);
                     xQueueSend(uartBLE.queueTxUART, &itemQueue, portMAX_DELAY);
-                    estadoApp = ESPERANDO_USUARIO;
+                    estadoAplicacionBLE = ESPERANDO_USUARIO;
                 }
                 break;
 
@@ -404,12 +464,12 @@ void tareaAplicacionBLE ( void* taskParmPtr ) {
                 if(paqueteValidado.frame.cmd == HYF) {
                     armarPaqueteRespuestaComando(&itemQueue, paqueteValidado.frame.cmd, RESP_OK);
                     xQueueSend(uartBLE.queueTxUART, &itemQueue, portMAX_DELAY);
-                    estadoApp = ESPERO_INICIO_LOG;
+                    estadoAplicacionBLE = ESPERO_INICIO_LOG;
                 }
                 else {
                     armarPaqueteRespuestaComando(&itemQueue, paqueteValidado.frame.cmd, RESP_ERR_CMD);
                     xQueueSend(uartBLE.queueTxUART, &itemQueue, portMAX_DELAY);
-                    estadoApp = ESPERO_HYF;
+                    estadoAplicacionBLE = ESPERO_HYF;
                 }
                 break;
 
@@ -417,12 +477,12 @@ void tareaAplicacionBLE ( void* taskParmPtr ) {
                 if(paqueteValidado.frame.cmd == INICIAR_LOG) {
                     armarPaqueteRespuestaComando(&itemQueue, paqueteValidado.frame.cmd, RESP_OK);
                     xQueueSend(uartBLE.queueTxUART, &itemQueue, portMAX_DELAY);
-                    estadoApp = ESPERO_INICIO_LOG;
+                    estadoAplicacionBLE = ENVIO_DATOS;
                 }
                 else {
                     armarPaqueteRespuestaComando(&itemQueue, paqueteValidado.frame.cmd, RESP_ERR_CMD);
                     xQueueSend(uartBLE.queueTxUART, &itemQueue, portMAX_DELAY);
-                    estadoApp = ESPERO_HYF;
+                    estadoAplicacionBLE = ESPERO_HYF;
                 }
                 break;
 
@@ -431,17 +491,14 @@ void tareaAplicacionBLE ( void* taskParmPtr ) {
                 if(paqueteValidado.frame.cmd == FIN_LOG) {
                     armarPaqueteRespuestaComando(&itemQueue, paqueteValidado.frame.cmd, RESP_OK);
                     xQueueSend(uartBLE.queueTxUART, &itemQueue, portMAX_DELAY);
-                    estadoApp = ESPERO_INICIO_LOG;
+                    estadoAplicacionBLE = ESPERO_INICIO_LOG;
                 }
                 else {
-                  xQueueReceive(queueADC, &itemQueueADC, portMAX_DELAY);
+                    armarPaqueteRespuestaComando(&itemQueue, paqueteValidado.frame.cmd, RESP_ERR_CMD);
+                    xQueueSend(uartBLE.queueTxUART, &itemQueue, portMAX_DELAY);
+                    estadoAplicacionBLE = ENVIO_DATOS;
                 }
                 break;
-
-
-
-
-
 
               default:
                 inicializarAplicacionBLE();
@@ -502,12 +559,12 @@ void tareaInicializarSistema( void* taskParmPtr ) {
   vTaskDelay(200);
 
   ingresarModoComando();
-  estadoApp = MODO_CMD;
+  estadoGeneral = MODO_CMD;
 
   while(TRUE) {
 
 
-      switch(estadoApp)
+      switch(estadoGeneral)
       {
 
         case MODO_CMD:
@@ -515,7 +572,7 @@ void tareaInicializarSistema( void* taskParmPtr ) {
           if(gpioRead(TEC1) == OFF) {
               salirModoComando();
               ingresarModoPasamanos();
-              estadoApp = MODO_PASAMANOS;
+              estadoGeneral = MODO_PASAMANOS;
               vTaskDelay (300);
           }
           break;
@@ -526,14 +583,14 @@ void tareaInicializarSistema( void* taskParmPtr ) {
           if(gpioRead(TEC1) == OFF) {
               salirModoPasamanos();
               ingresarModoComando();
-              estadoApp = MODO_CMD;
+              estadoGeneral = MODO_CMD;
               vTaskDelay (300);
           }
 
           break;
 
         default:
-          estadoApp = MODO_CMD;
+          estadoGeneral = MODO_CMD;
 
       }
 
@@ -541,6 +598,7 @@ void tareaInicializarSistema( void* taskParmPtr ) {
   }
 
 }
+
 
 /**
  * @fn void tareaPCaBLE( void* taskParmPtr )
@@ -554,7 +612,7 @@ void tareaBLEaPC( void* taskParmPtr ) {
   uartQueue_t itemQueue;
   while(TRUE) {
 
-    if(estadoApp == MODO_PASAMANOS) {
+    if(estadoGeneral == MODO_PASAMANOS) {
       xQueueReceive(uartBLE.queueRxUART, &itemQueue, portMAX_DELAY );
       xQueueSend(uartPC.queueTxUART, &itemQueue, portMAX_DELAY );
     }
@@ -577,7 +635,7 @@ void tareaPCaBLE( void* taskParmPtr ) {
   uartQueue_t itemQueue;
   while(TRUE) {
 
-    if(estadoApp == MODO_PASAMANOS) {
+    if(estadoGeneral == MODO_PASAMANOS) {
       xQueueReceive(uartPC.queueRxUART, &itemQueue, portMAX_DELAY );
       xQueueSend(uartBLE.queueTxUART, &itemQueue, portMAX_DELAY );
     }

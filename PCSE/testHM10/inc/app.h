@@ -21,13 +21,13 @@ extern void tareaPCaBLE( void* taskParmPtr );
 /* ========================== [ enumeraciones ] ====================== */
 
 /** @brief modo de funcionamiento de la aplicacion ppal */
-typedef enum {MODO_CMD, MODO_PASAMANOS} estadoApp_t;
+typedef enum {MODO_CMD = 0x10, MODO_PASAMANOS} estadoApp_t;
 /** @brief estado de protocolo */
-typedef enum {ESPERANDO_LOGIN, ESPERANDO_USUARIO, ESPERO_HYF, ESPERO_INICIO_LOG, ENVIO_DATOS} estadoAplicacionBLE_t;
+typedef enum {ESPERANDO_LOGIN = 0x20, ESPERANDO_USUARIO, ESPERO_HYF, ESPERO_INICIO_LOG, ENVIO_DATOS} estadoAplicacionBLE_t;
 /** @brief comandos del protocolo */
-typedef enum {LOGIN, USUARIO, HYF, INICIAR_LOG, DATO, FIN_LOG} cmd_t;
+typedef enum {LOGIN = 'a', USUARIO, HYF, INICIAR_LOG, DATO, FIN_LOG} cmd_t;
 /** @brief tipos de respuesta  a una cadena con comando */
-typedef enum {RESP_OK, RESP_ERR_CHKSUM, RESP_ERR_CMD, RESP_ERR_CTX} resp_t;
+typedef enum {RESP_OK = 0x30, RESP_ERR_CHKSUM, RESP_ERR_CMD, RESP_ERR_CTX} resp_t;
 
 /* ========================== [ estructuras ] ====================== */
 
@@ -75,13 +75,5 @@ typedef union {
 
 } paq_t;
 
-
-/** @brief union para convertir bytes<->words */
-typedef union {
-
-  uint16_t word;
-  uint8_t bytes[2];
-
-} uartWord_Byte_t;
 
 #endif /* PCSE_TESTHM10_INC_APP_H_ */

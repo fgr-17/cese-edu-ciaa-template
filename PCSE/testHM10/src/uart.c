@@ -407,15 +407,10 @@ void uartCallbackComun(uart_t*uartStr, BaseType_t*xHigherPriorityTaskWoken)
            i = 0;
 
            do {
-
                byteRx = Chip_UART_ReadByte( lpcUarts[uart].uartAddr );
-
                if(byteRx != '\0')
                  xQueueSendFromISR(uartStr->queueRxStringUART, (const void *) &byteRx, xHigherPriorityTaskWoken);
-
-
                i++;
-
            }while(byteRx!= '\0');
 
            return;
