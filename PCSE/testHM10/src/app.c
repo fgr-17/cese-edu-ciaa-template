@@ -315,11 +315,7 @@ void tareaEnviarBufferADC ( void*taskParam ) {
           vTaskDelay (2000);
 
       }
-
-
   }
-
-
 }
 
 
@@ -342,10 +338,9 @@ void tareaSimularMuestreo ( void*taskParam ) {
   pAct = buf1;
   pEnv = buf2;
 
-
+  pAux = pAct;
 
   while (TRUE) {
-
 
       if(estadoAplicacionBLE == ENVIO_DATOS) {
 
@@ -355,12 +350,12 @@ void tareaSimularMuestreo ( void*taskParam ) {
         // cargo valores hasta completar buffer del ADC
         while(i_adc < BUF_ADC_L) {
 
-            *pAct = arrayDatos[i_sgn];
-            pAct++;
+            *pAux = arrayDatos[i_sgn];
+            pAux++;
             i_sgn++;
             i_adc++;
 
-            if(i_sgn > ARRAY_DATOS_L) {
+            if(i_sgn >= ARRAY_DATOS_L) {
                 i_sgn = 0;
             }
         }

@@ -19,7 +19,7 @@
 #include "sapi.h"        // <= Biblioteca sAPI
 #include "hm10.h"
 #include "uart.h"
-
+#include "app.h"
 /* ---------------------------- prototipos --------------------------------- */
 
 int32_t inicializarStructUart (uart_t*uart, uartMap_t perif, uint32_t baudrate);
@@ -215,6 +215,40 @@ int32_t configurarUARTModoBytes ( uart_t*uartN) {
   taskEXIT_CRITICAL();
 }
 
+
+/**
+ * @fn int32_t descargarStringEnFIFOUARTTx (uartMap_t uartPerif, const char* string)
+ *
+ * @brief descargo datos en fifo de tx en tramos del tamaño de la FIFO
+ */
+
+int32_t descargarPaqueteEnFIFOUARTTx (uartMap_t uartPerif, const int8_t* paquete, int32_t largoPaq) {
+
+  int32_t i, j;
+
+
+  if(Chip_UART_ReadLineStatus( lpcUarts[uartPerif].uartAddr ) & UART_LSR_THRE) {
+
+      for(i = 0; i < largoPaq; i++) {
+
+          Chip_UART_SendByte(lpcUarts[uartPerif].uartAddr, *paquete );
+          paquete++;
+
+          // Si llene la fifo espero un poco a que se libere
+          if((j + 1) >=  FIFO_UART_L) {
+              while(!(Chip_UART_ReadLineStatus( lpcUarts[uartPerif].uartAddr ) & UART_LSR_THRE));
+              j = 0;
+          }
+          j++;
+        }
+
+  }
+  else
+    return -1;
+
+
+}
+
 /**
  * @fn int32_t descargarStringEnFIFOUARTTx (uartMap_t uartPerif, const char* string)
  *
@@ -274,11 +308,15 @@ void tareaEnviarDatosUART ( void* uartN ) {
 
       xQueueReceive(uartCast->queueTxUART, &itemColaUART, portMAX_DELAY);
       // uartWriteString(uartCast->perif, itemColaUART.mensaje);
-      descargarStringEnFIFOUARTTx(uartCast->perif, itemColaUART.mensaje);
-      // hacerlo con enviar byte? Chip_UART_SendByte(lpcUarts
-
+      switch(uartCast->modo) {
+        case MODO_BYTES:
+          descargarStringEnFIFOUARTTx(uartCast->perif, itemColaUART.mensaje);
+          break;
+        case MODO_UMBRAL:
+          descargarPaqueteEnFIFOUARTTx(uartCast->perif, itemColaUART.mensaje, BYTES_PAQ);
+          break;
+      }
   }
-
 }
 
 /**
@@ -293,6 +331,7 @@ void uartCallbackUmbral(uart_t*uartStr, BaseType_t*xHigherPriorityTaskWoken)
    uartQueue_t itemQueue;
    uartMap_t uart;
    uart = uartStr->perif;
+   static char charTemp;
 
    // levanto el registro de causa de interrupcion
    uint32_t regIIR = Chip_UART_ReadIntIDReg(lpcUarts[uart].uartAddr);
@@ -331,12 +370,12 @@ void uartCallbackUmbral(uart_t*uartStr, BaseType_t*xHigherPriorityTaskWoken)
      case UART_IIR_INTID_CTI:      /*!< Interrupt identification: Character time-out indicator interrupt */
        // reinicio fifo de recepcion
 
-       itemQueue.mensaje[0]= Chip_UART_ReadByte( lpcUarts[uart].uartAddr );
-       itemQueue.mensaje[1]= Chip_UART_ReadByte( lpcUarts[uart].uartAddr );
-       itemQueue.mensaje[2]= Chip_UART_ReadByte( lpcUarts[uart].uartAddr );
+       charTemp = Chip_UART_ReadByte( lpcUarts[uart].uartAddr );
+       charTemp = Chip_UART_ReadByte( lpcUarts[uart].uartAddr );
+       charTemp = Chip_UART_ReadByte( lpcUarts[uart].uartAddr );
 
-       regFCR = lpcUarts[uart].uartAddr->FCR;
-       lpcUarts[uart].uartAddr->FCR |= regFCR | UART_FCR_RX_RS;
+       // regFCR = lpcUarts[uart].uartAddr->FCR;
+       // lpcUarts[uart].uartAddr->FCR |= regFCR | UART_FCR_RX_RS;
        return;
 
        // Chip_UART_SetupFIFOS(lpcUarts[uartPC.perif].uartAddr, UART_FCR_RX_RS);
