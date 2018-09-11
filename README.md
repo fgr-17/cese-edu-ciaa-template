@@ -1,12 +1,6 @@
-# CESE, FI-UBA projects templates for EDU-CIAA-NXP
+# CESE, FI-UBA project template for EDU-CIAA-NXP
 
 CESE, FI-UBA: http://laboratorios.fi.uba.ar/lse/cursos.html
-
-Available libraries:
-   - LPCOpen v3.01
-   - sAPI r0.5.0.
-   - FreeRTOS Kernel V10.0.1
-   - Elm-Chan FatFS (SSP & USB).
 
 ## IMPORTANT
 
@@ -14,19 +8,31 @@ Available libraries:
 
 **Always use the [released versions](../../releases) because in these all examples are tested and the API documentation is consistent. The master branch may contain inconsistencies because this environment is currently under development.**
 
+## Available libraries:
+
+- LPCOpen v3.01
+- sAPI r0.5.0.
+- FreeRTOS Kernel V10.0.1
+- Elm-Chan FatFS (duplicated for SSP & USB).
+
 ## Supported boards
+
 - CIAA-NXP (LPC4337).
 - EDU-CIAA-NXP (LPC4337).
 
 ## Supported toolchains
+
 - gcc-arm-none-eabi
 
 ## Usage
-* Make sure you have an ```arm-none-eabi-*``` toolchain configured in your ```PATH```. If you don't have it, download [GCC ARM Embedded](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm).
-* Define ```PROJECT_NAME```  and ```PROJECT_PATH``` variables in ```project.mk``` according to the project you want to compile (PROJECT_PATH is relative to this folder, leave void if the project is in this folder).
-* Compile with ```make```.
-* Clean with ```make clean```. Clean for all targets with ```make clean_all```.
-* Download to target via OpenOCD with ```make download```.
+
+Make sure you have an ```arm-none-eabi-*``` toolchain configured in your ```PATH```. If you don't have it, download [GCC ARM Embedded](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm).
+- Define ```PROJECT_NAME```  and ```PROJECT_PATH``` variables in ```project.mk``` according to the project you want to compile (PROJECT_PATH is relative to this folder, leave void if the project is in this folder).
+- Compile with ```make```.
+- Clean with ```make clean```.
+
+Make sure you have an ```openocd``` configured in your ```PATH```.
+- Download to target via OpenOCD with ```make download```.
 
 ## Create a new project
 
@@ -35,9 +41,8 @@ Each project consist in a folder (with a non-spaces name) that includes inside 2
 ## Add a new library
 
 The ```libs``` folder allow you to include 2 types of libraries:
-
- - Simplie library. Consist in a folder (with a non-spaces name) that includes inside 2 folders, one named ```src``` (here go .c, .cpp or .s source code files), and another one named ```inc``` (here go .h or .hpp header files). This kind of library compiles automaticaly by the Makefile.
- - Advanced library. Consist in a library whit a complex folder and files strcuture, i.e. LibUSB. This case reuire make your own makefile. You can inspire from sAPI makefile to do that.
+- Simplie library. Consist in a folder (with a non-spaces name) that includes inside 2 folders, one named ```src``` (here go .c, .cpp or .s source code files), and another one named ```inc``` (here go .h or .hpp header files). This kind of library compiles automaticaly by the Makefile.
+- Advanced library. Consist in a library whit a complex folder and files strcuture, i.e. LibUSB. This case reuire make your own makefile. You can inspire from sAPI makefile to do that.
 
 
 ## Examples
@@ -51,43 +56,46 @@ Included examples are:
 ### C language
  - **sAPI library**
     - bare_metal
-        - ```adc_dac_01```: ADC and DAC example.
+        - ```adc_dac```: ADC and DAC example.
         - bluetooth
             - ```hm10_uart_bridge```: Bluettoth HM10 module AT, tx and rx example.
-        - ```cycles_counter_01```: clock cycles counter functions, only work in debug mode. Allows execution time trazability.
+        - ```cycles_counter```: clock cycles counter functions, only work in debug mode. Allows execution time trazability.
+        - ```dht11_temp_humidity```: humidity and temperature sensor.
         - gpio
             - ```gpio_01_switches_leds```: each switch drives the upper led.
             - ```gpio_02_blinky```: the simply led blinky with a blocking delay.
             - ```gpio_03_blinky_switch```: led blinky with a with a non-blocking delay, to allow you to respond to a switch at the same time.
             - ```gpio_04_led_sequences```: led sequences by using a non-blocking delay.
-        - i2c: 
+        - ```hcsr04_ultrasonic_sensor```:  HC-SR04 utrasonic distance sensor.
+        - i2c:
+            - IMUs
+                - ```mpu9250```: MPU9250 IMU 9DOF (Gyroscope, Accelerometer and Magnetometer) + Temperature.
             - magnetometers. In Chinese GY-273 module you can have one of this magnetometers, that have the same pinout but different register map. To difference them see the chip, ignore the board serigraphy.
                 - ```hmc5883l```: HMC5883L magnetometer. 
                 - ```qmc5883l```: QMC5883L magnetometer.
-            - IMUs
-                - ```mpu9250```: MPU9250 IMU 9DOF (Gyroscope, Accelerometer and Magnetometer) + Temperature.
-        - ```keypad_7segment_01```: Drives a keypad and 7 segment display.
-        - ```lcd_01```: Drives a LCD display.
+        - ```keypad_7segment```: Drives a keypad and 7 segment display.
+        - ```lcd```: Drives a LCD display.
         - pwm
             - ```pwm_01```: PWM applied to LEDs.
             - ```pwm_02_rgb_controller_uart```: RGB LED example.
-        - ```rtc_01```: RTC peripheral to have date and time clock.
+        - ```rtc```: RTC peripheral to have date and time clock.
         - ```sapi_basic_example```: a basic sAPI library example
-        - ```servo_01```: angular servomotor PWM control example.
-        - ```spi_01_sd_card_fat_filesystem```: ADC logging in a SD/MicroSD Card (SPI connected) by using a FAT File System (ChanFS).
-        - temperature_humidity_sensors
-            - ```dht11_01```: humidity and temperature sensor.
-        - ```tick_01_tick_hook```: periodic tick function (interrupt-based) with periodic callback.
+        - ```servo```: angular servomotor PWM control example.
+        - spi_sd_card
+            - ```spi_sd_card_01_wite_file```: Wite a text file in a SD/MicroSD Card (SPI connected) by using a FAT File System (Elm-Chan FAT FS).
+            - ```spi_sd_card_02_log_time_stamp```: Wite a text file in a SD/MicroSD Card (SPI connected) by using a FAT File System (Elm-Chan FAT FS) add time-stamp in samples.
+            - ```spi_sd_card_03_list_files```: List files in a SD/MicroSD Card (SPI connected) by using a FAT File System (Elm-Chan FAT FS). Show results in UART.
+        - ```tick_hook```: periodic tick function (interrupt-based) with periodic callback.
         - uart
             - ```uart_01_echo```: UART echo, it respond the same that you send from PC.
             - ```uart_02_receive_string_blocking```: waits until receive a certain pattern String in a UART or timeout expire (blocking code). Don't save received string.
             - ```uart_03_receive_string```: waits until receive a certain pattern String in a UART or timeout expire (non-blocking code). Don't save received string.
-        - ultrasonic_sensors
-            - ```hcsr04_01```:  HC-SR04 utrasonic distance sensor.
-        - wifi_esp01_esp8266
-            - ```01_uart_bridg```: use this to send AT commands directly to ESP01 module.
-            - ```02_http_server```: embedded web server to see sensor values.
-            - ```03_thingspeak```: send data to thingspeak dashboards.
+        - wifi_esp8266
+            - ```wifi_esp8266_01_uart_bridge```: use this to send AT commands directly to ESP01 module.
+            - ```wifi_esp8266_02_thingspeak```: send data to thingspeak dashboards.
+        - usb
+            - ```usb_device_01_hid_keyboard```: USB Device. Board as USB Keyboard.
+            - ```usb_device_02_cdc_virtualSerialPort```: USB Device. Using USB OTG as a virtual serial port.
     - operating_systems
         - coperative (see M.J. Pont's book at https://www.safetty.net/publications/pttes )
             - ```scheduler_01_seos```: first cooperative scheduler

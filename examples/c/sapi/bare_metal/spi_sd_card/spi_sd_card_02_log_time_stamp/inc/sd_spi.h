@@ -1,7 +1,7 @@
-/* Copyright 2016, Eric Pernia.
+/* Copyright 2016, Pablo Ridolfi
  * All rights reserved.
  *
- * This file is part sAPI library for microcontrollers.
+ * This file is part of Workspace.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,66 +31,34 @@
  *
  */
 
-/*
- * Date: 2016-04-26
- */
+#ifndef _SD_SPI_H_
+#define _SD_SPI_H_
 
 /*==================[inclusions]=============================================*/
 
-#include "sapi.h"              // <= sAPI header
+/*==================[cplusplus]==============================================*/
 
-/*==================[macros and definitions]=================================*/
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-/*==================[internal data declaration]==============================*/
+/*==================[macros]=================================================*/
 
-/*==================[internal functions declaration]=========================*/
+/*==================[typedef]================================================*/
 
-/*==================[internal data definition]===============================*/
+/*==================[external data declaration]==============================*/
 
-/*==================[external data definition]===============================*/
+/*==================[external functions declaration]=========================*/
 
-/*==================[internal functions definition]==========================*/
+void disk_timerproc(void);
 
-/*==================[external functions definition]==========================*/
+int main(void);
 
-/* FUNCION PRINCIPAL, PUNTO DE ENTRADA AL PROGRAMA LUEGO DE RESET. */
-int main(void){
+/*==================[cplusplus]==============================================*/
 
-   /* ------------- INICIALIZACIONES ------------- */
-
-   /* Inicializar la placa */
-   boardConfig();
-
-   /* Variable de Retardo no bloqueante */
-   delay_t delay;
-
-   /* Inicializar Retardo no bloqueante con tiempo en milisegundos
-      (500ms = 0,5s) */
-   delayConfig( &delay, 500 );
-
-   uint8_t led = OFF;
-   uint8_t valor = 0;
-
-   /* ------------- REPETIR POR SIEMPRE ------------- */
-   while(1) {
-
-      /* delayRead retorna TRUE cuando se cumple el tiempo de retardo */
-      if ( delayRead( &delay ) ){
-         if( !led )
-            led = ON;
-         else
-            led = OFF;
-         gpioWrite( LEDB, led );
-      }
-
-      valor = !gpioRead( TEC4 );
-      gpioWrite( LED3, valor );
-
-   }
-
-   /* NO DEBE LLEGAR NUNCA AQUI, debido a que a este programa no es llamado
-      por ningun S.O. */
-   return 0 ;
+#ifdef __cplusplus
 }
+#endif
 
 /*==================[end of file]============================================*/
+#endif /* #ifndef _SD_SPI_H_ */
