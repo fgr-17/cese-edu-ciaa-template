@@ -46,9 +46,7 @@ PROJECT_NAME = app
 
 # -------------------- RTOS1 -----------------------------
 
-PROJECT_PATH = RTOS1
+PROJECT_PATH = RTOS2
 # PROJECT_NAME = ejercicio06_01
 # PROJECT_NAME = RTOSejer9
-PROJECT_NAME = ejercicio0602
-
-=======
+PROJECT_NAME = practica01
