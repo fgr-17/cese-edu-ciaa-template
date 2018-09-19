@@ -55,12 +55,18 @@ int inicializarQueuesFlancosyTeclas ( void ) {
  */
 
 void tareaAntirreboteTEC1 ( void* taskParmPtr ) {
+  uart_t itemQueueUART;
+
 
   inicializarAntirreboteMEF(&antirreb_tecla1, TEC1);
   while ( TRUE ) {
       antirreboteMEF(&antirreb_tecla1);
 
-
+      if(antirreb_tecla1.t == TECLA_PRESIONADA) {
+        antirreb_tecla1.t = TECLA_SUELTA;
+        sprintf(itemQueueUART.mensaje, "TEC1 T%.4d", antirreb_tecla1.tiempoPresionado);
+        xQueueSend(queueUART, &itemQueueUART, portMAX_DELAY );
+      }
 
   }
   return;
@@ -72,10 +78,20 @@ void tareaAntirreboteTEC1 ( void* taskParmPtr ) {
  */
 
 void tareaAntirreboteTEC2 ( void* taskParmPtr ) {
-
+  uart_t itemQueueUART;
   inicializarAntirreboteMEF(&antirreb_tecla2, TEC2);
   while ( TRUE ) {
       antirreboteMEF(&antirreb_tecla2);
+
+      if(antirreb_tecla2.t == TECLA_PRESIONADA) {
+
+          antirreb_tecla2.t = TECLA_SUELTA;
+          sprintf(itemQueueUART.mensaje, "TEC2 T%.4d", antirreb_tecla2.tiempoPresionado);
+          xQueueSend(queueUART, &itemQueueUART, portMAX_DELAY );
+      }
+
+
+
   }
   return;
 }
@@ -154,7 +170,7 @@ void antirreboteMEF (antirreb_t*antirreb){
       flancoValido.tiempoFlanco = antirreb->tiempoPresionIni;
       xSemaphoreGive(antirreb->semaforoLed);
 
-      xQueueSend(queueFlancosValidados, (const void*) &flancoValido, portMAX_DELAY);
+      //xQueueSend(queueFlancosValidados, (const void*) &flancoValido, portMAX_DELAY);
 
 
 //      antirreb->t = TECLA_PRESIONADA;
@@ -207,7 +223,7 @@ void antirreboteMEF (antirreb_t*antirreb){
 	      flancoValido.tiempoFlanco = antirreb->tiempoPresionFin;
 	      xSemaphoreGive(antirreb->semaforoLed);
 
-	      xQueueSend(queueFlancosValidados, (const void*) &flancoValido, portMAX_DELAY);
+	      //xQueueSend(queueFlancosValidados, (const void*) &flancoValido, portMAX_DELAY);
 
 
 			}
