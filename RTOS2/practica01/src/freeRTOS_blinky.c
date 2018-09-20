@@ -46,137 +46,41 @@
 // sAPI header
 #include "sapi.h"
 
-
 #include "gpio.h"
-
-
-
-#include "led.h"
 #include "uart.h"
-#include "antirreb.h"
-
-
-
-
+#include "protocolo.h"
 
 /*==================[definiciones de datos externos]=========================*/
 
-DEBUG_PRINT_ENABLE;
-
-
-/* -------------------- defines ------------------------------ */
-
-#define TON_MIN         100
-#define TON_MAX         900
-
-#define TON_INICIAL     0
-#define TON_INCREMENTO  100
-
-#define PERIODO         1000
-
-/* -------------------- funciones ------------------------------ */
-
-void tareaLed( void* taskParmPtr );
-
-/* -------------------- funciones ------------------------------ */
-
-/**
- * @fn void myTask( void* taskParmPtr )
- *
- * @brief tarea que parpadea el led con tOn incremental
- */
-void tareaLed( void* taskParmPtr )
-{
-  TickType_t tiempoInicio;
-  TickType_t tiempoBloqueo;
-
-  TickType_t tOn, tOff;
-
-    gpioWrite( LED2, OFF );
-
-    gpioInit( GPIO1, GPIO_OUTPUT );
-
-    tOn = TON_INICIAL;
-
-    while(TRUE) {
-
-
-        if(antirreb_tecla1.t == TECLA_PRESIONADA){
-            tiempoInicio = xTaskGetTickCount();
-            antirreb_tecla1.t = TECLA_SUELTA;
-            gpioWrite(LEDG, ON);
-            vTaskDelayUntil(&tiempoInicio, antirreb_tecla1.tiempoPresionado / portTICK_RATE_MS);
-            gpioWrite(LEDG, OFF);
-        }
-        if(antirreb_tecla2.t == TECLA_PRESIONADA){
-            tiempoInicio = xTaskGetTickCount();
-            antirreb_tecla2.t = TECLA_SUELTA;
-            gpioWrite(LED1, ON);
-            vTaskDelayUntil(&tiempoInicio, antirreb_tecla2.tiempoPresionado / portTICK_RATE_MS);
-            gpioWrite(LED1, OFF);
-        }
-        // vTaskDelay(10 / portTICK_RATE_MS);
-/*
-        tiempoInicio = xTaskGetTickCount();
-
-        gpioWrite ( LEDR, ON );
-        gpi#include "FreeRTOS.h"oWrite ( GPIO1, ON );
-
-        tOn += TON_INCREMENTO;
-        if(tOn > TON_MAX) {
-            tOn = TON_MIN;
-        }
-
-        tOff = PERIODO - tOn;
-
-        tiempoBloqueo = tOn;
-
-        vTaskDelay(tiempoBloqueo / portTICK_RATE_MS);
-
-        gpioWrite ( LEDR, OFF );
-        gpioWrite ( GPIO1, OFF );
-*/
-   }
-}
 
 /*==================[funcion principal]======================================*/
 
 // FUNCION PRINCIPAL, PUNTO DE ENTRADA AL PROGRAMA LUEGO DE ENCENDIDO O RESET.
 int main(void)
 {
-   // ---------- CONFIGURACIONES ------------------------------
-   // Inicializar y configurar la plataforma
-  boardConfig();
 
-   // UART for debug messages
-   debugPrintConfigUart( UART_USB, 115200 );
-  // debugPrintlnString( "Blinky con freeRTOS y sAPI." );
 
-   xTaskCreate(tareaParpadearLedG, (const char *) "tareaParpadearLedG", configMINIMAL_STACK_SIZE, 0,
-                      tskIDLE_PRIORITY, 0);
+  inicializarTareaEnviarDatosUARTs();
 
-   /*
-   xTaskCreate(tareaParpadearLed1, (const char *) "tareaParpadearLed1", configMINIMAL_STACK_SIZE, 0,
-                         tskIDLE_PRIORITY, 0);
-   xTaskCreate(tareaParpadearLed2, (const char *) "tareaParpadearLed2", configMINIMAL_STACK_SIZE, 0,
-                            tskIDLE_PRIORITY, 0);
+//
+//   xTaskCreate(
+//       tareaEnviarDatosUART,                      // Funcion de la tarea a ejecutar
+//      (const char *)"UART_PC",                    // Nombre de la tarea como String amigable para el usuario
+//      configMINIMAL_STACK_SIZE*2,                 // Cantidad de stack de la tarea
+//      (void*) &uartPC,                            // Parametros de tarea
+//      tskIDLE_PRIORITY+2,                         // Prioridad de la tarea
+//      0                                           // Puntero a la tarea creada en el sistema
+//   );
 
-*/
-   xTaskCreate(tareaAntirreboteTEC1, (const char*)"AR1", configMINIMAL_STACK_SIZE*2, 0,
-                         tskIDLE_PRIORITY+2UL, 0);
+   xTaskCreate(
+       tareaRecibirPaquete,                      // Funcion de la tarea a ejecutar
+      (const char *)"recibopaq",                    // Nombre de la tarea como String amigable para el usuario
+      configMINIMAL_STACK_SIZE*2,                 // Cantidad de stack de la tarea
+      (void*) 0,                            // Parametros de tarea
+      tskIDLE_PRIORITY+3,                         // Prioridad de la tarea
+      0                                           // Puntero a la tarea creada en el sistema
+   );
 
-    xTaskCreate(tareaAntirreboteTEC2, (const char*)"AR2", configMINIMAL_STACK_SIZE*2, 0,
-                             tskIDLE_PRIORITY+2UL, 0);
-
-    // xTaskCreate(tareaMedirTecla, (const char*)"mide tiempo flancos", configMINIMAL_STACK_SIZE*2, 0,
-    //                             tskIDLE_PRIORITY+1UL, 0);
-
-    xTaskCreate(tareaEnviarDatosUART, (const char*)"envia x UART", configMINIMAL_STACK_SIZE*2, 0,
-                                 tskIDLE_PRIORITY + 1UL, 0);
-
-    inicializarTecla();
-    inicializarQueuesTeclas();
-    inicializarQueuesFlancosyTeclas();
 
    // Iniciar scheduler
    vTaskStartScheduler();

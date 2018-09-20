@@ -60,7 +60,7 @@ extern int DbgConsole_Printf( const char *fmt_s, ... );
 #define configTICK_RATE_HZ                           ( ( TickType_t ) 1000 ) // 1000 ticks per second => 1ms tick rate
 #define configMAX_PRIORITIES                         ( 7 )
 #define configMINIMAL_STACK_SIZE                     ( ( uint16_t ) 90 )
-#define configTOTAL_HEAP_SIZE                        ( ( size_t ) ( 8 * 1024 ) )    /* 85 Kbytes. */
+#define configTOTAL_HEAP_SIZE                        ( ( size_t ) ( 16 * 1024 ) )    /* 85 Kbytes. */
 #define configMAX_TASK_NAME_LEN                      ( 16 )
 #define configUSE_TRACE_FACILITY                     1
 #define configUSE_16_BIT_TICKS                       0
@@ -77,7 +77,7 @@ extern int DbgConsole_Printf( const char *fmt_s, ... );
 #define configRECORD_STACK_HIGH_ADDRESS              1
 
 // Add old API compatibility
-// #define configENABLE_BACKWARD_COMPATIBILITY          1
+#define configENABLE_BACKWARD_COMPATIBILITY          1
 
 /* Co-routine definitions. */
 #define configUSE_CO_ROUTINES                        0
@@ -112,13 +112,13 @@ extern int DbgConsole_Printf( const char *fmt_s, ... );
 
 /* The lowest interrupt priority that can be used in a call to a "set priority"
  * function. */
-#define configLIBRARY_LOWEST_INTERRUPT_PRIORITY         0x07
+#define configLIBRARY_LOWEST_INTERRUPT_PRIORITY         0x7
 
 /* The highest interrupt priority that can be used by any interrupt service
  * routine that makes calls to interrupt safe FreeRTOS API functions.  DO NOT CALL
  * INTERRUPT SAFE FREERTOS API FUNCTIONS FROM ANY INTERRUPT THAT HAS A HIGHER
  * PRIORITY THAN THIS! (higher priorities are lower numeric values. */
-#define configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY    1
+#define configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY    5
 
 /* Interrupt priorities used by the kernel port layer itself.  These are generic
 * to all Cortex-M ports, and do not rely on any particular library functions. */
