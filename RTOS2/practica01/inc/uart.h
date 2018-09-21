@@ -40,6 +40,11 @@ typedef struct {
   uint32_t baudrate;
   QueueHandle_t queueTxUART;
   QueueHandle_t queueRxUART;
+
+  // mutex para controlar la salida de datos
+  SemaphoreHandle_t txMutex;
+
+
   uartModo_t modo;
 }uart_t;
 
@@ -63,6 +68,8 @@ extern int32_t configurarUARTModoBytes ( uart_t*uartN);
 extern void tareaEnviarDatosUART ( void* uartN );
 extern void tareaRecibirStringPorTimeout (void* uartN);
 
+
+extern int32_t descargarBufferEnFIFOUARTTx (uartMap_t uartPerif, const char* buf, uint8_t n);
 
 /* ---------------------------- variables --------------------------------- */
 

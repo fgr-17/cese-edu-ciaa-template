@@ -46,6 +46,8 @@
 // sAPI header
 #include "sapi.h"
 
+#include "qmpool.h"
+
 #include "gpio.h"
 #include "uart.h"
 #include "protocolo.h"
@@ -61,6 +63,7 @@ int main(void)
 
 
   inicializarTareaEnviarDatosUARTs();
+  inicializarRecibirPaquete();
 
 //
 //   xTaskCreate(
@@ -72,14 +75,10 @@ int main(void)
 //      0                                           // Puntero a la tarea creada en el sistema
 //   );
 
-   xTaskCreate(
-       tareaRecibirPaquete,                      // Funcion de la tarea a ejecutar
-      (const char *)"recibopaq",                    // Nombre de la tarea como String amigable para el usuario
-      configMINIMAL_STACK_SIZE*2,                 // Cantidad de stack de la tarea
-      (void*) 0,                            // Parametros de tarea
-      tskIDLE_PRIORITY+3,                         // Prioridad de la tarea
-      0                                           // Puntero a la tarea creada en el sistema
-   );
+   xTaskCreate(tareaRecibirPaquete,(const char *)"recibopaq", configMINIMAL_STACK_SIZE*3, (void*) 0, tskIDLE_PRIORITY+3, 0);
+   xTaskCreate(tareaMayusculizar,(const char *)"mayusculizar", configMINIMAL_STACK_SIZE*2, (void*) 0, tskIDLE_PRIORITY+2, 0);
+   xTaskCreate(tareaEnviarMayusculizados,(const char *)"envioMayus", configMINIMAL_STACK_SIZE*2, (void*) 0, tskIDLE_PRIORITY+1, 0);
+
 
 
    // Iniciar scheduler
