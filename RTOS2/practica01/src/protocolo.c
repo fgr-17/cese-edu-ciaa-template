@@ -38,8 +38,17 @@ void tareaEnviarMayusculizados (void*taskPtr);
 void tareaRecibirPaquete (void* taskParam);
 
 static int32_t validarOP (op_t op);
-static uint8_t* clasificarTamPool (uint8_t tam, QMPool*qmpool);
-static int32_t procesarDatos(uint8_t*pPool, QMPool*qmpool, uint8_t tam, op_t op);
+static int32_t procesarDatos(poolInfo_t*poolAsociado, op_t op);
+static poolInfo_t* obtenerPoolPorTam (uint8_t tam);
+
+static int32_t inicializarColaCeldaPool(colaCeldaPool_t*colaPool);
+static poolInfo_t* obtenerCeldaPoolParaEscribir(colaCeldaPool_t*colaCeldaPool);
+static poolInfo_t* obtenerCeldaPoolParaLiberar(colaCeldaPool_t*colaCeldaPool);
+static poolInfo_t* obtenerCeldaPoolParaDescartar(colaCeldaPool_t*colaCeldaPool);
+
+static uint32_t liberarPoolMasReciente (void);
+static uint32_t liberarPoolMasAntiguo (void);
+static poolInfo_t* obtenerPoolPorTam (uint8_t tam);
 
 /* ---------------------------- colas de dato --------------------------------- */
 
@@ -62,8 +71,117 @@ static uint8_t poolMemoriaL[POOL_MEMORIA_L_T]; /* Espacio de almacenamiento para
 /* ---------------------------- variables globales --------------------------------- */
 
 estadoRecepcion_t estadoRecepcion;
+colaCeldaPool_t celdasPools;
+
+
 
 /* ---------------------------- implementacion de funciones --------------------------------- */
+/**
+ * @fn static int32_t inicializarColaPool(colaPool_t*colaPool)
+ *
+ * @brief inicializo las colas de pools
+ *
+ */
+
+static int32_t inicializarColaCeldaPool(colaCeldaPool_t*colaCeldaPool) {
+
+  colaCeldaPool->ini = 0;
+  colaCeldaPool->fin = 0;
+  colaCeldaPool->estadoColaCeldaPool = COLA_CELDA_POOL_VACIO;
+  return 0;
+
+}
+/**
+ * @fn static int32_t obtenerCeldaPoolParaEscribir(colaPool_t*colaPool)
+ *
+ * @brief inicializo las colas de pools
+ *
+ */
+
+static poolInfo_t* obtenerCeldaPoolParaEscribir(colaCeldaPool_t*colaCeldaPool) {
+
+  poolInfo_t*poolObtenido;
+
+  // si la cola de celdas esta llena, retorno null
+  if(colaCeldaPool->estadoColaCeldaPool == COLA_CELDA_POOL_LLENO) {
+      return NULL;
+  }
+  poolObtenido = &(colaCeldaPool->poolsAbiertos[colaCeldaPool->fin]);
+
+  colaCeldaPool->fin++;
+
+  if(colaCeldaPool->fin >= POOLS_MAX)
+    colaCeldaPool = 0;
+
+  if(colaCeldaPool->fin == colaCeldaPool->ini)
+    colaCeldaPool->estadoColaCeldaPool = COLA_CELDA_POOL_LLENO;
+  else
+    colaCeldaPool->estadoColaCeldaPool = COLA_CELDA_POOL_NORMAL;
+
+  return poolObtenido;
+}
+
+/**
+ * @fn static int32_t obtenerCeldaPoolParaLiberar(colaPool_t*colaPool)
+ *
+ * @brief obtengo la celda mas antigua
+ *
+ */
+
+static poolInfo_t* obtenerCeldaPoolParaLiberar(colaCeldaPool_t*colaCeldaPool) {
+
+  poolInfo_t*poolObtenido;
+
+  // si la cola de celdas esta llena, retorno null
+  if(colaCeldaPool->estadoColaCeldaPool == COLA_CELDA_POOL_VACIO) {
+      return NULL;
+  }
+  poolObtenido = &(colaCeldaPool->poolsAbiertos[colaCeldaPool->ini]);
+
+  colaCeldaPool->ini++;
+
+  if(colaCeldaPool->ini >= POOLS_MAX)
+    colaCeldaPool->ini = 0;
+
+  if(colaCeldaPool->fin == colaCeldaPool->ini)
+    colaCeldaPool->estadoColaCeldaPool = COLA_CELDA_POOL_VACIO;
+  else
+    colaCeldaPool->estadoColaCeldaPool = COLA_CELDA_POOL_NORMAL;
+
+  return poolObtenido;
+}
+
+/**
+ * @fn static int32_t obtenerCeldaPoolParaDescartar(colaPool_t*colaPool)
+ *
+ * @brief obtengo la celda mas reciente para descartar
+ *
+ */
+
+static poolInfo_t* obtenerCeldaPoolParaDescartar(colaCeldaPool_t*colaCeldaPool) {
+
+  poolInfo_t*poolObtenido;
+
+  // si la cola de celdas esta llena, retorno null
+  if(colaCeldaPool->estadoColaCeldaPool == COLA_CELDA_POOL_VACIO) {
+      return NULL;
+  }
+
+  if(colaCeldaPool->fin == 0)
+    colaCeldaPool->fin = POOLS_MAX - 1;
+  else
+    colaCeldaPool->fin--;
+
+  poolObtenido = &(colaCeldaPool->poolsAbiertos[colaCeldaPool->fin]);
+
+  if(colaCeldaPool->fin == colaCeldaPool->ini)
+    colaCeldaPool->estadoColaCeldaPool = COLA_CELDA_POOL_VACIO;
+  else
+    colaCeldaPool->estadoColaCeldaPool = COLA_CELDA_POOL_NORMAL;
+
+  return poolObtenido;
+}
+
 
 
 /**
@@ -74,10 +192,10 @@ estadoRecepcion_t estadoRecepcion;
  */
 int32_t inicializarQueues (void) {
 
-  queMayusculizar = xQueueCreate (QUEUE_MAYUSCULIZAR_L, sizeof(queueMayMin_t));
-  queMinusculizar = xQueueCreate (QUEUE_MINUSCULIZAR_L, sizeof(queueMayMin_t));
-  queMayusculizados = xQueueCreate (QUEUE_MAYUSCULIZADOS_L, sizeof(queueMayMin_t));
-  queMinusculizados = xQueueCreate (QUEUE_MINUSCULIZADOS_L, sizeof(queueMayMin_t));
+  queMayusculizar = xQueueCreate (QUEUE_MAYUSCULIZAR_L, sizeof(poolInfo_t*));
+  queMinusculizar = xQueueCreate (QUEUE_MINUSCULIZAR_L, sizeof(poolInfo_t*));
+  queMayusculizados = xQueueCreate (QUEUE_MAYUSCULIZADOS_L, sizeof(poolInfo_t*));
+  queMinusculizados = xQueueCreate (QUEUE_MINUSCULIZADOS_L, sizeof(poolInfo_t*));
 
   return 0;
 }
@@ -99,6 +217,7 @@ int32_t inicializarRecibirPaquete (void) {
   QMPool_init(&memPoolM, poolMemoriaM, sizeof(poolMemoriaM), POOL_MEMORIA_M_TBLOQUE);
   QMPool_init(&memPoolL, poolMemoriaL, sizeof(poolMemoriaL), POOL_MEMORIA_L_TBLOQUE);
 
+  inicializarColaCeldaPool(&celdasPools);
 
   return 0;
 }
@@ -112,7 +231,7 @@ int32_t inicializarRecibirPaquete (void) {
 
 void tareaMayusculizar (void*taskPtr) {
 
-  queueMayMin_t itemQueue;
+  poolInfo_t*itemQueue;
 
   uint8_t i;
 
@@ -120,9 +239,9 @@ void tareaMayusculizar (void*taskPtr) {
 
       xQueueReceive(queMayusculizar, &itemQueue, portMAX_DELAY);
 
-      for(i = PRT_DAT_INI_I; i < (itemQueue.bufL + PRT_DAT_INI_I); i++ )
-          if( (itemQueue.buf[i] >= 'a') && (itemQueue.buf[i] <= 'z') )
-            itemQueue.buf[i] -= 'a' - 'A';
+      for(i = PRT_DAT_INI_I; i < (itemQueue->bufL - 1); i++ )
+          if( (itemQueue->buf[i] >= 'a') && (itemQueue->buf[i] <= 'z') )
+            itemQueue->buf[i] -= 'a' - 'A';
 
       xQueueSend(queMayusculizados, &itemQueue, portMAX_DELAY);
 
@@ -138,7 +257,7 @@ void tareaMayusculizar (void*taskPtr) {
 
 void tareaEnviarMayusculizados (void*taskPtr) {
 
-  queueMayMin_t itemQueue;
+  poolInfo_t*itemQueue;
 
   uint8_t i;
 
@@ -149,10 +268,10 @@ void tareaEnviarMayusculizados (void*taskPtr) {
 
       // funcion que vacia buffer en fifo de tx de la uart a medida que se va vaciando.
       // vuelve cuando termino
-      descargarBufferEnFIFOUARTTx(uartPC.perif, itemQueue.buf, itemQueue.bufL + PRT_BYTES_PROTCOLO);
+      descargarBufferEnFIFOUARTTx(uartPC.perif, itemQueue->buf, itemQueue->bufL + PRT_BYTES_PROTCOLO);
 
       // una vez que procese los datos, libero el pool recibido
-      //QMPool_put(itemQueue.ctrlPool, itemQueue.buf);
+      liberarPoolMasAntiguo();
   }
 }
 
@@ -171,10 +290,8 @@ void tareaRecibirPaquete (void* taskParam) {
   uint8_t tam;
 
   // punteros a pool y estructura de control
-  uint8_t*pPool;
   uint8_t*pDatos;
-  QMPool*qmpool;
-
+  poolInfo_t*poolObtenido;
   // operacion recibida
   op_t operacion;
 
@@ -213,9 +330,13 @@ void tareaRecibirPaquete (void* taskParam) {
         cuentaT = byteRecibido;
         tam = byteRecibido;
         // reservo un pool de memoria del tamaño adecuado
-        pPool = clasificarTamPool(cuentaT, qmpool);
+        poolObtenido = obtenerPoolPorTam(tam);
+        // no hay mas memoria libre
+        // if(poolObtenido == NULL)
+          // configASSERT();
+
         // me hago una copia del puntero para guardar el inicio
-        pDatos = pPool;
+        pDatos = poolObtenido->buf;
 
         *pDatos = PRT_STX;
         pDatos++;
@@ -245,11 +366,12 @@ void tareaRecibirPaquete (void* taskParam) {
 
         if(byteRecibido == PRT_ETX) {
           *pDatos = PRT_ETX;
-          procesarDatos(pPool, qmpool, tam, operacion);
+          procesarDatos(poolObtenido, operacion);
         }
         else
+          liberarPoolMasReciente();
           // si no recibí ETX, descarto los datos recibidos
-          QMPool_put(qmpool, pPool);
+
 
         estadoRecepcion = RECIBIR_STX;
         break;
@@ -285,32 +407,88 @@ static int32_t validarOP (op_t op) {
 
 }
 
+
 /**
- * @fn uint8_t* clasificarTamPool (uint8_t tam)
+ * @fn uint32_t clasificarTamPool (poolInfo_t*pool)
+ *
+ * @brief libero pool mas reciente
+ */
+
+static uint32_t liberarPoolMasReciente (void) {
+
+    poolInfo_t*poolObtenido;
+
+    // asigno el casillero al puntero
+    poolObtenido = obtenerCeldaPoolParaDescartar(&celdasPools);
+
+    // pregunto si pude obtener un pool abierto
+    if(poolObtenido == NULL)
+      while(1);
+
+    QMPool_put(poolObtenido->ctrlPool, poolObtenido->buf);
+
+    return 0;
+}
+/**
+ * @fn uint32_t liberarPoolMasAntiguo (poolInfo_t*pool)
+ *
+ * @brief libero pool mas antiguo
+ */
+
+static uint32_t liberarPoolMasAntiguo (void) {
+
+    poolInfo_t*poolObtenido;
+
+    // asigno el casillero al puntero
+    poolObtenido = obtenerCeldaPoolParaLiberar(&celdasPools);
+
+    // pregunto si pude obtener un pool abierto
+    if(poolObtenido == NULL)
+      while(1);
+
+    QMPool_put(poolObtenido->ctrlPool, poolObtenido->buf);
+
+    return 0;
+}
+
+/**
+ * @fn uint8_t* obtenerPoolPorTam (uint8_t tam)
  *
  * @brief recibo el tamaño del buffer a procesar y devuelvo un pool de tamaño adecuado
  */
 
-static uint8_t* clasificarTamPool (uint8_t tam, QMPool*qmpool) {
+static poolInfo_t* obtenerPoolPorTam (uint8_t tam) {
 
-  uint8_t*pPool;
+  poolInfo_t*poolObtenido;
+
+  // asigno el casillero al puntero
+  poolObtenido = obtenerCeldaPoolParaEscribir(&celdasPools);
+
+  if(poolObtenido == NULL)
+    return NULL;
 
   // al tam recibido, le sumo 4 bytes por el STX, OP, TAM y ETX
   tam = tam + PRT_BYTES_PROTCOLO;
 
   if(tam <= POOL_MEMORIA_S_TBLOQUE) {
-    pPool = QMPool_get(&memPoolS, 0U);
-    qmpool = &memPoolS;
+    poolObtenido->buf = QMPool_get(&memPoolS, 0U);
+    poolObtenido->bufL = tam;
+    poolObtenido->ctrlPool = &memPoolS;
+    poolObtenido->tPool = chico;
   }
   else if((tam > POOL_MEMORIA_S_TBLOQUE) && (tam <= POOL_MEMORIA_M_TBLOQUE)) {
-    pPool = QMPool_get(&memPoolM, 0U);
-    qmpool = &memPoolM;
+    poolObtenido->buf = QMPool_get(&memPoolM, 0U);
+    poolObtenido->bufL = tam;
+    poolObtenido->ctrlPool = &memPoolM;
+    poolObtenido->tPool = medio;
   }
   else if(tam > POOL_MEMORIA_M_TBLOQUE) {
-    pPool = QMPool_get(&memPoolL, 0U);
-    qmpool = &memPoolL;
+    poolObtenido->buf = QMPool_get(&memPoolL, 0U);
+    poolObtenido->bufL = tam;
+    poolObtenido->ctrlPool = &memPoolL;
+    poolObtenido->tPool = grande;
   }
-  return pPool;
+  return poolObtenido;
 }
 
 /**
@@ -319,23 +497,14 @@ static uint8_t* clasificarTamPool (uint8_t tam, QMPool*qmpool) {
  * @brief recibo el pool y su longitud, la operación, y proceso el texto
  */
 
-static int32_t procesarDatos(uint8_t*pPool, QMPool*qmpool, uint8_t tam, op_t op) {
-
-  queueMayMin_t itemQueue;
-
+static int32_t procesarDatos(poolInfo_t*poolAsociado, op_t op) {
 
   switch(op){
     case PRT_MAYUS:
-      itemQueue.buf = pPool;
-      itemQueue.ctrlPool = qmpool;
-      itemQueue.bufL = tam;
-      xQueueSend(queMayusculizar, &itemQueue, portMAX_DELAY);
+      xQueueSend(queMayusculizar, &poolAsociado, portMAX_DELAY);
       break;
     case PRT_MINUS:
-      itemQueue.buf = pPool;
-      itemQueue.ctrlPool = qmpool;
-      itemQueue.bufL = tam;
-      xQueueSend(queMinusculizar, &itemQueue, portMAX_DELAY);
+      xQueueSend(queMinusculizar, &poolAsociado, portMAX_DELAY);
       break;
     case PRT_REPSTACK:
       break;

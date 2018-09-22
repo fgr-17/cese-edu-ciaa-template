@@ -12,6 +12,8 @@
 
 #define TIMEOUT_RX_PAQUETE portMAX_DELAY
 
+#define PROTOCOLO_DEBUG
+
 #ifndef PROTOCOLO_DEBUG
   #define PRT_STX             0x55
   #define PRT_ETX             0xAA
@@ -34,14 +36,15 @@
 
 #define PRT_BYTES_PROTCOLO  4
 
-
+// cantidad total de pools que pueden abrirse en simultaneo
+#define POOLS_MAX   (POOL_MEMORIA_S_CBLOQUES + POOL_MEMORIA_M_CBLOQUES + POOL_MEMORIA_L_CBLOQUES)
 
 #define POOL_MEMORIA_S_TBLOQUE          16
-#define POOL_MEMORIA_S_CBLOQUES         20
+#define POOL_MEMORIA_S_CBLOQUES         4
 #define POOL_MEMORIA_S_T                (POOL_MEMORIA_S_TBLOQUE * POOL_MEMORIA_S_CBLOQUES)
 
 #define POOL_MEMORIA_M_TBLOQUE          64
-#define POOL_MEMORIA_M_CBLOQUES         5
+#define POOL_MEMORIA_M_CBLOQUES         2
 #define POOL_MEMORIA_M_T                (POOL_MEMORIA_M_TBLOQUE * POOL_MEMORIA_M_CBLOQUES)
 
 #define POOL_MEMORIA_L_TBLOQUE          256
@@ -59,13 +62,26 @@
 /* ---------------------------- tipos de dato --------------------------------- */
 
 typedef enum {RECIBIR_STX, RECIBIR_OP, RECIBIR_T, RECIBIENDO_DATOS, RECIBIR_ETX} estadoRecepcion_t;
+typedef enum {chico, medio, grande} tPool_t;
+
+typedef enum {COLA_CELDA_POOL_LLENO, COLA_CELDA_POOL_VACIO, COLA_CELDA_POOL_NORMAL} estadoColaPool_t;
+
 
 typedef struct {
+
   uint8_t*buf;
   uint8_t bufL;
+  tPool_t tPool;
   QMPool*ctrlPool;
-} queueMayMin_t;
+  uint8_t indice;
+} poolInfo_t;
 
+typedef struct {
+  poolInfo_t poolsAbiertos[POOLS_MAX];
+  uint8_t ini;
+  uint8_t fin;
+  estadoColaPool_t estadoColaCeldaPool;
+} colaCeldaPool_t;
 
 /* ---------------------------- funciones externas --------------------------------- */
 
