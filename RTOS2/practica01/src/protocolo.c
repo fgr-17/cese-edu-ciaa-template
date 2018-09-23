@@ -111,7 +111,7 @@ static poolInfo_t* obtenerCeldaPoolParaEscribir(colaCeldaPool_t*colaCeldaPool) {
   colaCeldaPool->fin++;
 
   if(colaCeldaPool->fin >= POOLS_MAX)
-    colaCeldaPool = 0;
+    colaCeldaPool->fin = 0;
 
   if(colaCeldaPool->fin == colaCeldaPool->ini)
     colaCeldaPool->estadoColaCeldaPool = COLA_CELDA_POOL_LLENO;
@@ -268,7 +268,7 @@ void tareaEnviarMayusculizados (void*taskPtr) {
 
       // funcion que vacia buffer en fifo de tx de la uart a medida que se va vaciando.
       // vuelve cuando termino
-      descargarBufferEnFIFOUARTTx(uartPC.perif, itemQueue->buf, itemQueue->bufL + PRT_BYTES_PROTCOLO);
+      descargarBufferEnFIFOUARTTx(uartPC.perif, itemQueue->buf, itemQueue->bufL);
 
       // una vez que procese los datos, libero el pool recibido
       liberarPoolMasAntiguo();

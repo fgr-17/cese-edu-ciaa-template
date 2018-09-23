@@ -1,0 +1,3 @@
+- pasar recepción de la uart por irq thre
+- minusculizar
+- reportes de stack y heap
