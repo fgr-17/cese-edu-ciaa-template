@@ -75,9 +75,13 @@ int main(void)
 //      0                                           // Puntero a la tarea creada en el sistema
 //   );
 
-   xTaskCreate(tareaRecibirPaquete,(const char *)"recibopaq", configMINIMAL_STACK_SIZE*3, (void*) 0, tskIDLE_PRIORITY+3, 0);
-   xTaskCreate(tareaMayusculizar,(const char *)"mayusculizar", configMINIMAL_STACK_SIZE*2, (void*) 0, tskIDLE_PRIORITY+2, 0);
-   xTaskCreate(tareaEnviarMayusculizados,(const char *)"envioMayus", configMINIMAL_STACK_SIZE*2, (void*) 0, tskIDLE_PRIORITY+1, 0);
+   xTaskCreate(tareaRecibirPaquete,(const char *)"recibopaq", configMINIMAL_STACK_SIZE, (void*) 0, tskIDLE_PRIORITY+3, 0);
+
+   xTaskCreate(tareaMayusculizar,(const char *)"mayusculizar", configMINIMAL_STACK_SIZE, (void*) 0, tskIDLE_PRIORITY+2, 0);
+   xTaskCreate(tareaEnviarMayusculizados,(const char *)"envioMayus", configMINIMAL_STACK_SIZE, (void*) 0, tskIDLE_PRIORITY+1, 0);
+
+   xTaskCreate(tareaMinusculizar,(const char *)"minusc", configMINIMAL_STACK_SIZE, (void*) 0, tskIDLE_PRIORITY+2, 0);
+   xTaskCreate(tareaEnviarMinusculizados,(const char *)"envioMinus", configMINIMAL_STACK_SIZE, (void*) 0, tskIDLE_PRIORITY+1, 0);
 
 
 

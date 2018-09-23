@@ -33,9 +33,12 @@
 /* ---------------------------- protocolos de funciones --------------------------------- */
 
 int32_t inicializarRecibirPaquete (void);
+
 void tareaMayusculizar (void*taskPtr);
 void tareaEnviarMayusculizados (void*taskPtr);
 void tareaRecibirPaquete (void* taskParam);
+void tareaMinusculizar (void*taskPtr);
+void tareaEnviarMinusculizados (void*taskPtr);
 
 static int32_t validarOP (op_t op);
 static int32_t procesarDatos(poolInfo_t*poolAsociado, op_t op);
@@ -265,6 +268,60 @@ void tareaEnviarMayusculizados (void*taskPtr) {
 
       // espero recibir cadena con mayusculas mientras estoy bloqueado
       xQueueReceive(queMayusculizados, &itemQueue, portMAX_DELAY);
+
+      // funcion que vacia buffer en fifo de tx de la uart a medida que se va vaciando.
+      // vuelve cuando termino
+      descargarBufferEnFIFOUARTTx(uartPC.perif, itemQueue->buf, itemQueue->bufL);
+
+      // una vez que procese los datos, libero el pool recibido
+      liberarPoolMasAntiguo();
+  }
+}
+
+
+/**
+ * @fn void tareaMinusculizar (void*taskPtr)
+ *
+ * @brief tarea que espera bloqueada una queue para pasar caracteres en mayus a minus y
+ *        ponerlo en una cola de salida
+ */
+
+void tareaMinusculizar (void*taskPtr) {
+
+  poolInfo_t*itemQueue;
+
+  uint8_t i;
+
+  while( TRUE ) {
+
+      xQueueReceive(queMinusculizar, &itemQueue, portMAX_DELAY);
+
+      for(i = PRT_DAT_INI_I; i < (itemQueue->bufL - 1); i++ )
+          if( (itemQueue->buf[i] >= 'A') && (itemQueue->buf[i] <= 'Z') )
+            itemQueue->buf[i] += 'a' - 'A';
+
+      xQueueSend(queMinusculizados, &itemQueue, portMAX_DELAY);
+
+  }
+
+}
+
+/**
+ * @fn void tareaEnviarMinusculizados (void*taskPtr)
+ *
+ * @brief tarea que espera bloqueada una queue con datos en minuscula
+ */
+
+void tareaEnviarMinusculizados (void*taskPtr) {
+
+  poolInfo_t*itemQueue;
+
+  uint8_t i;
+
+  while( TRUE ) {
+
+      // espero recibir cadena con mayusculas mientras estoy bloqueado
+      xQueueReceive(queMinusculizados, &itemQueue, portMAX_DELAY);
 
       // funcion que vacia buffer en fifo de tx de la uart a medida que se va vaciando.
       // vuelve cuando termino

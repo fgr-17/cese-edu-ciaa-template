@@ -86,8 +86,14 @@ typedef struct {
 /* ---------------------------- funciones externas --------------------------------- */
 
 extern int32_t inicializarRecibirPaquete (void);
+
 extern void tareaMayusculizar (void*taskPtr);
 extern void tareaEnviarMayusculizados (void*taskPtr);
+
+extern void tareaMinusculizar (void*taskPtr);
+extern void tareaEnviarMinusculizados (void*taskPtr);
+
+
 extern void tareaRecibirPaquete (void* taskParam);
 
 

@@ -48,9 +48,13 @@ int32_t inicializarStructUart (uart_t*uart, uartMap_t perif, uint32_t baudrate) 
   uart->queueRxUART = xQueueCreate (QUEUE_UART_L, sizeof(char));        // la cola de datos de recepcion recibe de a bytes
   // uart->queueRxStringUART = xQueueCreate (FIFO_UART_L*2, sizeof(char));
 
-  uart->txMutex = xSemaphoreCreateMutex();
-
-  uart->modo = MODO_BYTES;
+  // uart->txMutex = xSemaphoreCreateCounting(14, 0);
+  // creo semaforo binario para manejar la irq de tx de la uart
+  uart->txMutex = xSemaphoreCreateBinary();
+  // uart->txMutex = xSemaphoreCreateMutex();
+  // arranco con el semaforo libre.
+  xSemaphoreGive(uart->txMutex);
+  // uart->modo = MODO_BYTES;
   return 0;
 }
 
@@ -65,7 +69,7 @@ int32_t inicializarTareaEnviarDatosUARTs ( void ) {
   inicializarStructUart(&uartPC, UART_PC, UART_PC_BAUDRATE);
   uartInit( uartPC.perif, uartPC.baudrate);
   uartRxInterruptSet(UART_PC, TRUE);
-  //uartTxInterruptSet(UART_PC, TRUE);
+  uartTxInterruptSet(UART_PC, TRUE);
   return 0;
 }
 
@@ -99,6 +103,34 @@ int32_t configurarUARTModoBytes ( uart_t*uartN) {
  *
  * @brief descargo datos en fifo de tx en tramos del tamaño de la FIFO
  */
+//
+//int32_t descargarBufferEnFIFOUARTTx (uartMap_t uartPerif, const char* buf, uint8_t n) {
+//
+//  uint8_t j;
+//  int32_t i = 0;
+//
+//  // espero a tener arriba el bit el THRE(transmit holding register empty)
+//  while(!(Chip_UART_ReadLineStatus( lpcUarts[uartPerif].uartAddr ) & UART_LSR_THRE));
+//
+//  //xSemaphoreTake(uartPC.txMutex, portMAX_DELAY);
+//
+//  // paso a vaciar el buffer sobre la fifo
+//  for(j = 0; j < n; j++) {
+//
+//      Chip_UART_SendByte(lpcUarts[uartPerif].uartAddr, *buf );
+//      buf++;
+//      i++;
+//
+//      if((i + 1) >=  FIFO_UART_L) {
+//          while(!(Chip_UART_ReadLineStatus( lpcUarts[uartPerif].uartAddr ) & UART_LSR_THRE));
+//          //xSemaphoreTake(uartPC.txMutex, portMAX_DELAY);
+//          i = 0;
+//      }
+//
+//    }
+//
+//}
+
 
 int32_t descargarBufferEnFIFOUARTTx (uartMap_t uartPerif, const char* buf, uint8_t n) {
 
@@ -106,9 +138,9 @@ int32_t descargarBufferEnFIFOUARTTx (uartMap_t uartPerif, const char* buf, uint8
   int32_t i = 0;
 
   // espero a tener arriba el bit el THRE(transmit holding register empty)
-  while(!(Chip_UART_ReadLineStatus( lpcUarts[uartPerif].uartAddr ) & UART_LSR_THRE));
+  // while(!(Chip_UART_ReadLineStatus( lpcUarts[uartPerif].uartAddr ) & UART_LSR_THRE));
 
-  //xSemaphoreTake(uartPC.txMutex, portMAX_DELAY);
+  xSemaphoreTake(uartPC.txMutex, portMAX_DELAY);
 
   // paso a vaciar el buffer sobre la fifo
   for(j = 0; j < n; j++) {
@@ -118,8 +150,8 @@ int32_t descargarBufferEnFIFOUARTTx (uartMap_t uartPerif, const char* buf, uint8
       i++;
 
       if((i + 1) >=  FIFO_UART_L) {
-          while(!(Chip_UART_ReadLineStatus( lpcUarts[uartPerif].uartAddr ) & UART_LSR_THRE));
-          //xSemaphoreTake(uartPC.txMutex, portMAX_DELAY);
+          // while(!(Chip_UART_ReadLineStatus( lpcUarts[uartPerif].uartAddr ) & UART_LSR_THRE));
+          xSemaphoreTake(uartPC.txMutex, portMAX_DELAY);
           i = 0;
       }
 
