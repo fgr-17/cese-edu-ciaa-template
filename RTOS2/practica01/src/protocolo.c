@@ -15,7 +15,8 @@
 /* ---------------------------- includes --------------------------------- */
 
 #include <stdint.h>
-
+#include <string.h>
+#include "FreeRTOSConfig.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
@@ -32,6 +33,9 @@
 
 /* ---------------------------- protocolos de funciones --------------------------------- */
 
+
+char* itoa(int value, char* result, int base);
+
 int32_t inicializarRecibirPaquete (void);
 
 void tareaMayusculizar (void*taskPtr);
@@ -39,6 +43,9 @@ void tareaEnviarMayusculizados (void*taskPtr);
 void tareaRecibirPaquete (void* taskParam);
 void tareaMinusculizar (void*taskPtr);
 void tareaEnviarMinusculizados (void*taskPtr);
+
+static uint8_t armarPaqueteMedicionStack (uint8_t*buf, UBaseType_t stackMedido);
+static uint8_t enviarPaqueteMedicionHeap (uint8_t*buf);
 
 static int32_t validarOP (op_t op);
 static int32_t procesarDatos(poolInfo_t*poolAsociado, op_t op);
@@ -79,6 +86,40 @@ colaCeldaPool_t celdasPools;
 
 
 /* ---------------------------- implementacion de funciones --------------------------------- */
+
+
+
+
+/**
+ * C++ version 0.4 char* style "itoa":
+ * Written by Lukás Chmela
+ * Released under GPLv3.
+
+ */
+char* itoa(int value, char* result, int base) {
+   // check that the base if valid
+   if (base < 2 || base > 36) { *result = '\0'; return result; }
+
+   char* ptr = result, *ptr1 = result, tmp_char;
+   int tmp_value;
+
+   do {
+      tmp_value = value;
+      value /= base;
+      *ptr++ = "zyxwvutsrqponmlkjihgfedcba9876543210123456789abcdefghijklmnopqrstuvwxyz" [35 + (tmp_value - value * base)];
+   } while ( value );
+
+   // Apply negative sign
+   if (tmp_value < 0) *ptr++ = '-';
+   *ptr-- = '\0';
+   while(ptr1 < ptr) {
+      tmp_char = *ptr;
+      *ptr--= *ptr1;
+      *ptr1++ = tmp_char;
+   }
+   return result;
+}
+
 /**
  * @fn static int32_t inicializarColaPool(colaPool_t*colaPool)
  *
@@ -261,8 +302,10 @@ void tareaMayusculizar (void*taskPtr) {
 void tareaEnviarMayusculizados (void*taskPtr) {
 
   poolInfo_t*itemQueue;
+  uint8_t largoBuf;
 
-  uint8_t i;
+  uint8_t bufStack[PRT_TAM_PAQ_REPSTACK];
+  UBaseType_t stackMedido;
 
   while( TRUE ) {
 
@@ -275,6 +318,12 @@ void tareaEnviarMayusculizados (void*taskPtr) {
 
       // una vez que procese los datos, libero el pool recibido
       liberarPoolMasAntiguo();
+
+
+      // mido maximo de stack, armo paquete y tiro
+      stackMedido = uxTaskGetStackHighWaterMark(NULL);
+      largoBuf = armarPaqueteMedicionStack(bufStack, stackMedido);
+      descargarBufferEnFIFOUARTTx(uartPC.perif, bufStack, largoBuf);
   }
 }
 
@@ -316,7 +365,10 @@ void tareaEnviarMinusculizados (void*taskPtr) {
 
   poolInfo_t*itemQueue;
 
-  uint8_t i;
+  uint8_t largoBuf;
+
+  uint8_t bufStack[PRT_TAM_PAQ_REPSTACK];
+  UBaseType_t stackMedido;
 
   while( TRUE ) {
 
@@ -329,7 +381,81 @@ void tareaEnviarMinusculizados (void*taskPtr) {
 
       // una vez que procese los datos, libero el pool recibido
       liberarPoolMasAntiguo();
+
+      // mido maximo de stack, armo paquete y tiro
+      stackMedido = uxTaskGetStackHighWaterMark(NULL);
+      largoBuf = armarPaqueteMedicionStack(bufStack, stackMedido);
+      descargarBufferEnFIFOUARTTx(uartPC.perif, bufStack, largoBuf);
   }
+}
+/**
+ * @fn void armarPaqueteMedicionStack (uint8_t*buf)
+ *
+ * @brief paquete que mide el máximo historico del stack y arma el paquete
+ *
+ */
+
+
+
+static uint8_t armarPaqueteMedicionStack (uint8_t*buf, UBaseType_t stackMedido) {
+
+  uint8_t stackStringLargo, i;
+
+  char stackString[STACK_STRING_L];
+
+  itoa((int32_t) stackMedido, stackString, BASE_STACK);
+
+  stackStringLargo = strlen(stackString);
+
+  buf[PRT_STX_I] = PRT_STX;
+  buf[PRT_OP_I] = PRT_REPSTACK;
+  buf[PRT_TAM_I] = (uint8_t) stackStringLargo;
+
+  for(i = 0; i < stackStringLargo; i++)
+      buf[PRT_DAT_INI_I+i] = stackString[i];
+
+  buf[PRT_DAT_INI_I + stackStringLargo] = PRT_ETX;
+
+  return (PRT_BYTES_PROTCOLO + stackStringLargo);
+
+}
+
+/**
+ * @fn void armarPaqueteMedicionHeap (uint8_t*buf)
+ *
+ * @brief paquete que mide el máximo historico del stack y arma el paquete
+ *
+ */
+
+
+
+static uint8_t enviarPaqueteMedicionHeap (uint8_t*buf) {
+
+  uint8_t heapStringLargo, i;
+
+  uint32_t heapMedido;
+
+  char heapString[HEAP_STRING_L];
+
+
+  heapMedido = POOL_MEMORIA_S_T + POOL_MEMORIA_M_T + POOL_MEMORIA_L_T;
+
+
+  itoa((int32_t) heapMedido, heapString, BASE_HEAP);
+
+  heapStringLargo = strlen(heapString);
+
+  buf[PRT_STX_I] = PRT_STX;
+  buf[PRT_OP_I] = PRT_REPHEAP;
+  buf[PRT_TAM_I] = (uint8_t) heapStringLargo;
+
+  for(i = 0; i < heapStringLargo; i++)
+      buf[PRT_DAT_INI_I+i] = heapString[i];
+
+  buf[PRT_DAT_INI_I + heapStringLargo] = PRT_ETX;
+
+  return (PRT_BYTES_PROTCOLO + heapStringLargo);
+
 }
 
 /**
@@ -351,6 +477,12 @@ void tareaRecibirPaquete (void* taskParam) {
   poolInfo_t*poolObtenido;
   // operacion recibida
   op_t operacion;
+  uint8_t bufHeap[HEAP_STRING_L], largoBufHeap;
+
+
+  largoBufHeap = enviarPaqueteMedicionHeap(bufHeap);
+  descargarBufferEnFIFOUARTTx(uartPC.perif, bufHeap, largoBufHeap);
+
 
 
   while(TRUE) {

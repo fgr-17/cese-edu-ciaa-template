@@ -61,7 +61,6 @@
 int main(void)
 {
 
-
   inicializarTareaEnviarDatosUARTs();
   inicializarRecibirPaquete();
 

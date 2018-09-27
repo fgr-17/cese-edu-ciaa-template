@@ -34,7 +34,20 @@
 // indice byte de inicio de datos
 #define PRT_DAT_INI_I       3
 
+/** @brief cantidad de bytes fijos de protocolo */
 #define PRT_BYTES_PROTCOLO  4
+
+// defines para el manejo del string con el valor de heap
+#define HEAP_STRING_L   8
+#define BASE_HEAP       10
+// defines para el manejo del string con el valor de stack
+#define STACK_STRING_L    6
+#define BASE_STACK        10
+
+/** @brief cantidad de bytes que mando cuando informo el stack */
+#define PRT_TAM_PAQ_REPSTACK              (PRT_BYTES_PROTCOLO + STACK_STRING_L)
+
+
 
 // cantidad total de pools que pueden abrirse en simultaneo
 #define POOLS_MAX   (POOL_MEMORIA_S_CBLOQUES + POOL_MEMORIA_M_CBLOQUES + POOL_MEMORIA_L_CBLOQUES)
@@ -66,15 +79,33 @@ typedef enum {chico, medio, grande} tPool_t;
 
 typedef enum {COLA_CELDA_POOL_LLENO, COLA_CELDA_POOL_VACIO, COLA_CELDA_POOL_NORMAL} estadoColaPool_t;
 
-
+/**
+ * @brief campos de inicio del paquete
+ */
 typedef struct {
 
-  uint8_t*buf;
-  uint8_t bufL;
-  tPool_t tPool;
-  QMPool*ctrlPool;
-  uint8_t indice;
+  uint8_t stx_byte;
+  uint8_t op_byte;
+  uint8_t tam_byte;
+
+}paqCampos_t;
+
+/**
+ * @brief campos para manejo del pool de memoria
+ */
+
+typedef struct {
+  uint8_t*buf;    // puntero al inicio del pool
+  uint8_t bufL;   // cantidad de datos válidos
+  tPool_t tPool;  // tamaño del pool
+  QMPool*ctrlPool;// estructura de control
+  uint8_t indice; // indice de recorrido
 } poolInfo_t;
+
+
+/**
+ * @brief cola de datos para el manejo de pools.
+ */
 
 typedef struct {
   poolInfo_t poolsAbiertos[POOLS_MAX];

@@ -42,7 +42,7 @@ typedef struct {
   QueueHandle_t queueRxUART;
 
   // mutex para controlar la salida de datos
-  SemaphoreHandle_t txMutex;
+  SemaphoreHandle_t tx_thre;
 
 
   uartModo_t modo;
@@ -56,6 +56,16 @@ typedef union {
   uint8_t bytes[2];
 
 } uartWord_Byte_t;
+
+/** @brief union para convertir bytes<->words */
+typedef union {
+
+  uint32_t dword;
+  uint16_t word[2];
+  uint8_t bytes[4];
+
+} uartDword_Byte_t;
+
 
 /* ---------------------------- prototipos --------------------------------- */
 

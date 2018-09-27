@@ -50,10 +50,10 @@ int32_t inicializarStructUart (uart_t*uart, uartMap_t perif, uint32_t baudrate) 
 
   // uart->txMutex = xSemaphoreCreateCounting(14, 0);
   // creo semaforo binario para manejar la irq de tx de la uart
-  uart->txMutex = xSemaphoreCreateBinary();
+  uart->tx_thre = xSemaphoreCreateBinary();
   // uart->txMutex = xSemaphoreCreateMutex();
   // arranco con el semaforo libre.
-  xSemaphoreGive(uart->txMutex);
+  xSemaphoreGive(uart->tx_thre);
   // uart->modo = MODO_BYTES;
   return 0;
 }
@@ -140,7 +140,7 @@ int32_t descargarBufferEnFIFOUARTTx (uartMap_t uartPerif, const char* buf, uint8
   // espero a tener arriba el bit el THRE(transmit holding register empty)
   // while(!(Chip_UART_ReadLineStatus( lpcUarts[uartPerif].uartAddr ) & UART_LSR_THRE));
 
-  xSemaphoreTake(uartPC.txMutex, portMAX_DELAY);
+  xSemaphoreTake(uartPC.tx_thre, portMAX_DELAY);
 
   // paso a vaciar el buffer sobre la fifo
   for(j = 0; j < n; j++) {
@@ -151,7 +151,7 @@ int32_t descargarBufferEnFIFOUARTTx (uartMap_t uartPerif, const char* buf, uint8
 
       if((i + 1) >=  FIFO_UART_L) {
           // while(!(Chip_UART_ReadLineStatus( lpcUarts[uartPerif].uartAddr ) & UART_LSR_THRE));
-          xSemaphoreTake(uartPC.txMutex, portMAX_DELAY);
+          xSemaphoreTake(uartPC.tx_thre, portMAX_DELAY);
           i = 0;
       }
 
@@ -253,7 +253,7 @@ void UART2_IRQHandler(void) {
      // Tx Interrupt
 
      if( (status & UART_LSR_THRE) || (status & UART_LSR_TEMT) ) {
-         xSemaphoreGiveFromISR(uartPC.txMutex, &xHigherPriorityTaskWoken);
+         xSemaphoreGiveFromISR(uartPC.tx_thre, &xHigherPriorityTaskWoken);
 
      }
      else {
