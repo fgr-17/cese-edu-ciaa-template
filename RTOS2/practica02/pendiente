@@ -1,0 +1,8 @@
+- pasar recepción de la uart por irq thre - HECHO CON SEM. BINARIO - CONSULTAR
+- minusculizar - HECHO
+- reportes de stack y heap
+- unificar la salida de la uart por una cola de datos única
+- ver manejo de errores
+- timeout de paquete
+- cambiar nombre de mutex
+- armar union con campos del paquete (el campo buf hacerlo union)
