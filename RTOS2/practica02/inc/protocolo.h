@@ -17,7 +17,7 @@
 #ifndef PROTOCOLO_DEBUG
   #define PRT_STX             0x55
   #define PRT_ETX             0xAA
-  typedef enum {PRT_MAYUS = 0x00, PRT_MINUS = 0x01, PRT_REPSTACK = 0x02, PRT_REPHEAP = 0x03, PRT_MSJEST = 0x04} op_t;
+  typedef enum {PRT_MAYUS = 0x00, PRT_MINUS = 0x01, PRT_REPSTACK = 0x02, PRT_REPHEAP = 0x03, PRT_MSJEST = 0x04, PRT_PERF = 0x05} op_t;
 #else
   typedef enum {PRT_MAYUS = 'q', PRT_MINUS = 'w', PRT_REPSTACK = 'e', PRT_REPHEAP = 'r', PRT_MSJEST = 't'} op_t;
   #define PRT_STX             'a'
@@ -126,6 +126,12 @@ extern void tareaEnviarMinusculizados (void*taskPtr);
 
 
 extern void tareaRecibirPaquete (void* taskParam);
+
+extern uint32_t liberarPoolMasAntiguo (void);
+extern uint8_t armarPaqueteMedicionStack (uint8_t*buf, UBaseType_t stackMedido);
+
+/* ---------------------------- variables globales --------------------------------- */
+extern QueueHandle_t queTransmision;
 
 
 #endif /* RTOS2_PRACTICA01_INC_PROTOCOLO_H_ */

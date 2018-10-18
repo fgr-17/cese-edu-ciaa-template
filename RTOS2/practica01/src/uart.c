@@ -44,7 +44,7 @@ int32_t inicializarStructUart (uart_t*uart, uartMap_t perif, uint32_t baudrate) 
 
   uart->perif = perif;
   uart->baudrate = baudrate;
-  uart->queueTxUART = xQueueCreate (QUEUE_UART_L, sizeof(uartQueue_t));
+  uart->queTransmision = xQueueCreate (QUEUE_UART_L, sizeof(uartQueue_t));
   uart->queueRxUART = xQueueCreate (QUEUE_UART_L, sizeof(char));        // la cola de datos de recepcion recibe de a bytes
   // uart->queueRxStringUART = xQueueCreate (FIFO_UART_L*2, sizeof(char));
 

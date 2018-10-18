@@ -44,7 +44,9 @@ void tareaRecibirPaquete (void* taskParam);
 void tareaMinusculizar (void*taskPtr);
 void tareaEnviarMinusculizados (void*taskPtr);
 
-static uint8_t armarPaqueteMedicionStack (uint8_t*buf, UBaseType_t stackMedido);
+uint32_t liberarPoolMasAntiguo (void);
+uint8_t armarPaqueteMedicionStack (uint8_t*buf, UBaseType_t stackMedido);
+
 static uint8_t enviarPaqueteMedicionHeap (uint8_t*buf);
 
 static int32_t validarOP (op_t op);
@@ -57,15 +59,15 @@ static poolInfo_t* obtenerCeldaPoolParaLiberar(colaCeldaPool_t*colaCeldaPool);
 static poolInfo_t* obtenerCeldaPoolParaDescartar(colaCeldaPool_t*colaCeldaPool);
 
 static uint32_t liberarPoolMasReciente (void);
-static uint32_t liberarPoolMasAntiguo (void);
 static poolInfo_t* obtenerPoolPorTam (uint8_t tam);
 
 /* ---------------------------- colas de dato --------------------------------- */
 
 QueueHandle_t queMayusculizar;
 QueueHandle_t queMinusculizar;
-QueueHandle_t queMayusculizados;
-QueueHandle_t queMinusculizados;
+// QueueHandle_t queMayusculizados;
+// QueueHandle_t queMinusculizados;
+QueueHandle_t queTransmision;
 
 /* ---------------------------- pools de memoria --------------------------------- */
 
@@ -238,8 +240,9 @@ int32_t inicializarQueues (void) {
 
   queMayusculizar = xQueueCreate (QUEUE_MAYUSCULIZAR_L, sizeof(poolInfo_t*));
   queMinusculizar = xQueueCreate (QUEUE_MINUSCULIZAR_L, sizeof(poolInfo_t*));
-  queMayusculizados = xQueueCreate (QUEUE_MAYUSCULIZADOS_L, sizeof(poolInfo_t*));
-  queMinusculizados = xQueueCreate (QUEUE_MINUSCULIZADOS_L, sizeof(poolInfo_t*));
+  // queMayusculizados = xQueueCreate (QUEUE_MAYUSCULIZADOS_L, sizeof(poolInfo_t*));
+  // queMinusculizados = xQueueCreate (QUEUE_MINUSCULIZADOS_L, sizeof(poolInfo_t*));
+  queTransmision = xQueueCreate (QUEUE_MINUSCULIZADOS_L, sizeof(poolInfo_t*));
 
   return 0;
 }
@@ -287,7 +290,7 @@ void tareaMayusculizar (void*taskPtr) {
           if( (itemQueue->buf[i] >= 'a') && (itemQueue->buf[i] <= 'z') )
             itemQueue->buf[i] -= 'a' - 'A';
 
-      xQueueSend(queMayusculizados, &itemQueue, portMAX_DELAY);
+      xQueueSend(queTransmision, &itemQueue, portMAX_DELAY);
 
   }
 
@@ -299,6 +302,7 @@ void tareaMayusculizar (void*taskPtr) {
  * @brief tarea que espera bloqueada una queue con datos en mayuscula
  */
 
+/*
 void tareaEnviarMayusculizados (void*taskPtr) {
 
   poolInfo_t*itemQueue;
@@ -325,7 +329,7 @@ void tareaEnviarMayusculizados (void*taskPtr) {
       largoBuf = armarPaqueteMedicionStack(bufStack, stackMedido);
       descargarBufferEnFIFOUARTTx(uartPC.perif, bufStack, largoBuf);
   }
-}
+}*/
 
 
 /**
@@ -349,7 +353,7 @@ void tareaMinusculizar (void*taskPtr) {
           if( (itemQueue->buf[i] >= 'A') && (itemQueue->buf[i] <= 'Z') )
             itemQueue->buf[i] += 'a' - 'A';
 
-      xQueueSend(queMinusculizados, &itemQueue, portMAX_DELAY);
+      xQueueSend(queTransmision, &itemQueue, portMAX_DELAY);
 
   }
 
@@ -360,7 +364,7 @@ void tareaMinusculizar (void*taskPtr) {
  *
  * @brief tarea que espera bloqueada una queue con datos en minuscula
  */
-
+/*
 void tareaEnviarMinusculizados (void*taskPtr) {
 
   poolInfo_t*itemQueue;
@@ -387,7 +391,7 @@ void tareaEnviarMinusculizados (void*taskPtr) {
       largoBuf = armarPaqueteMedicionStack(bufStack, stackMedido);
       descargarBufferEnFIFOUARTTx(uartPC.perif, bufStack, largoBuf);
   }
-}
+}*/
 /**
  * @fn void armarPaqueteMedicionStack (uint8_t*buf)
  *
@@ -397,7 +401,7 @@ void tareaEnviarMinusculizados (void*taskPtr) {
 
 
 
-static uint8_t armarPaqueteMedicionStack (uint8_t*buf, UBaseType_t stackMedido) {
+uint8_t armarPaqueteMedicionStack (uint8_t*buf, UBaseType_t stackMedido) {
 
   uint8_t stackStringLargo, i;
 
@@ -479,11 +483,13 @@ void tareaRecibirPaquete (void* taskParam) {
   op_t operacion;
   uint8_t bufHeap[HEAP_STRING_L], largoBufHeap;
 
+  xQueueReceive(uartPC.queueRxUART, &byteRecibido, TIMEOUT_RX_PAQUETE);
 
-  largoBufHeap = enviarPaqueteMedicionHeap(bufHeap);
-  descargarBufferEnFIFOUARTTx(uartPC.perif, bufHeap, largoBufHeap);
-
-
+  // espero recibir una 'A' para mandar el heap y comenzar el programa
+  if(byteRecibido == 'A') {
+    largoBufHeap = enviarPaqueteMedicionHeap(bufHeap);
+    descargarBufferEnFIFOUARTTx(uartPC.perif, bufHeap, largoBufHeap);
+  }
 
   while(TRUE) {
 
@@ -589,6 +595,7 @@ static int32_t validarOP (op_t op) {
     case PRT_REPSTACK:
     case PRT_REPHEAP:
     case PRT_MSJEST:
+    case PRT_PERF:
       return op;
     default:
       return -1;
@@ -624,7 +631,7 @@ static uint32_t liberarPoolMasReciente (void) {
  * @brief libero pool mas antiguo
  */
 
-static uint32_t liberarPoolMasAntiguo (void) {
+uint32_t liberarPoolMasAntiguo (void) {
 
     poolInfo_t*poolObtenido;
 

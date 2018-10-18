@@ -38,7 +38,7 @@ typedef struct {
 typedef struct {
   uartMap_t perif;
   uint32_t baudrate;
-  QueueHandle_t queueTxUART;
+  QueueHandle_t queTransmision;
   QueueHandle_t queueRxUART;
 
   // mutex para controlar la salida de datos

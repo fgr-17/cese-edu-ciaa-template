@@ -18,6 +18,8 @@
 
 #include "sapi.h"        // <= Biblioteca sAPI
 #include "uart.h"
+#include "qmpool.h"
+#include "protocolo.h"
 /* ---------------------------- prototipos --------------------------------- */
 
 int32_t inicializarStructUart (uart_t*uart, uartMap_t perif, uint32_t baudrate);
@@ -25,7 +27,7 @@ int32_t inicializarTareaEnviarDatosUARTs ( void );
 
 int32_t configurarUARTModoBytes ( uart_t*uartN);
 
-int32_t descargarBufferEnFIFOUARTTx (uartMap_t uartPerif, const char* buf, uint8_t n);
+int32_t descargarBufferEnFIFOUARTTx (uartMap_t uartPerif, const uint8_t* buf, uint8_t n);
 
 /* ---------------------------- variables globales --------------------------------- */
 
@@ -44,14 +46,10 @@ int32_t inicializarStructUart (uart_t*uart, uartMap_t perif, uint32_t baudrate) 
 
   uart->perif = perif;
   uart->baudrate = baudrate;
-  uart->queueTxUART = xQueueCreate (QUEUE_UART_L, sizeof(uartQueue_t));
-  uart->queueRxUART = xQueueCreate (QUEUE_UART_L, sizeof(char));        // la cola de datos de recepcion recibe de a bytes
-  // uart->queueRxStringUART = xQueueCreate (FIFO_UART_L*2, sizeof(char));
-
-  // uart->txMutex = xSemaphoreCreateCounting(14, 0);
+  // la cola de datos de recepcion recibe de a bytes
+  uart->queueRxUART = xQueueCreate (QUEUE_UART_L, sizeof(char));
   // creo semaforo binario para manejar la irq de tx de la uart
   uart->tx_thre = xSemaphoreCreateBinary();
-  // uart->txMutex = xSemaphoreCreateMutex();
   // arranco con el semaforo libre.
   xSemaphoreGive(uart->tx_thre);
   // uart->modo = MODO_BYTES;
@@ -135,36 +133,55 @@ int32_t configurarUARTModoBytes ( uart_t*uartN) {
 
 
 
+void tareaTransmisionUART (void* taskParam ) {
+  poolInfo_t*itemQueue;
+  uint8_t largoBuf;
+
+  uint8_t bufStack[PRT_TAM_PAQ_REPSTACK];
+  UBaseType_t stackMedido;
+  while(1) {
+
+      xQueueReceive(queTransmision, &itemQueue, portMAX_DELAY);
+
+      descargarBufferEnFIFOUARTTx(uartPC.perif, itemQueue->buf, itemQueue->bufL);
+
+      // una vez que procese los datos, libero el pool recibido
+      liberarPoolMasAntiguo();
+
+      // mido maximo de stack, armo paquete y tiro
+      stackMedido = uxTaskGetStackHighWaterMark(NULL);
+      largoBuf = armarPaqueteMedicionStack(bufStack, stackMedido);
+      descargarBufferEnFIFOUARTTx(uartPC.perif, bufStack, largoBuf);
+  }
+
+}
+
 /**
  * @fn int32_t descargarBufferEnFIFOUARTTx (uartMap_t uartPerif, const char* buf, uint8_t n)
  *
  * @brief descargo datos en fifo de tx en tramos del tamaño de la FIFO
  */
-int32_t descargarBufferEnFIFOUARTTx (uartMap_t uartPerif, const char* buf, uint8_t n) {
+
+
+int32_t descargarBufferEnFIFOUARTTx (uartMap_t uartPerif, const uint8_t* buf, uint8_t n) {
 
   uint8_t j;
   int32_t i = 0;
 
-  // espero a tener arriba el bit el THRE(transmit holding register empty)
-  // while(!(Chip_UART_ReadLineStatus( lpcUarts[uartPerif].uartAddr ) & UART_LSR_THRE));
-
+  // intento tomar semaforo de thre
   xSemaphoreTake(uartPC.tx_thre, portMAX_DELAY);
 
   // paso a vaciar el buffer sobre la fifo
   for(j = 0; j < n; j++) {
 
-      Chip_UART_SendByte(lpcUarts[uartPerif].uartAddr, *buf );
-      buf++;
-      i++;
-
-      if((i + 1) >=  FIFO_UART_L) {
-          // while(!(Chip_UART_ReadLineStatus( lpcUarts[uartPerif].uartAddr ) & UART_LSR_THRE));
-          xSemaphoreTake(uartPC.tx_thre, portMAX_DELAY);
-          i = 0;
-      }
-
+    if((i + 1) >=  FIFO_UART_L){
+        xSemaphoreTake(uartPC.tx_thre, portMAX_DELAY);
+        i = 0;
     }
 
+    Chip_UART_SendByte(lpcUarts[uartPerif].uartAddr, buf[j]);
+    i++;
+  }
 }
 
 /**

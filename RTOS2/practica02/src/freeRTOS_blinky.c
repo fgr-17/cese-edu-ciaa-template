@@ -33,9 +33,6 @@
 /*==================[inlcusiones]============================================*/
 
 // Includes de FreeRTOS
-// #include "../../ejercicio0601/inc/FreeRTOSConfig.h"
-
-
 #include "FreeRTOSConfig.h"
 
 #include "FreeRTOS.h"
@@ -77,10 +74,10 @@ int main(void)
    xTaskCreate(tareaRecibirPaquete,(const char *)"recibopaq", configMINIMAL_STACK_SIZE, (void*) 0, tskIDLE_PRIORITY+3, 0);
 
    xTaskCreate(tareaMayusculizar,(const char *)"mayusculizar", configMINIMAL_STACK_SIZE, (void*) 0, tskIDLE_PRIORITY+2, 0);
-   xTaskCreate(tareaEnviarMayusculizados,(const char *)"envioMayus", configMINIMAL_STACK_SIZE, (void*) 0, tskIDLE_PRIORITY+1, 0);
 
    xTaskCreate(tareaMinusculizar,(const char *)"minusc", configMINIMAL_STACK_SIZE, (void*) 0, tskIDLE_PRIORITY+2, 0);
-   xTaskCreate(tareaEnviarMinusculizados,(const char *)"envioMinus", configMINIMAL_STACK_SIZE, (void*) 0, tskIDLE_PRIORITY+1, 0);
+
+   xTaskCreate(tareaTransmisionUART,(const char *)"salidaUART", configMINIMAL_STACK_SIZE, (void*) 0, tskIDLE_PRIORITY+1, 0);
 
 
 
