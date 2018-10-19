@@ -27,10 +27,8 @@
 #include "qmpool.h"
 
 #include "uart.h"
+
 #include "protocolo.h"
-
-
-
 /* ---------------------------- protocolos de funciones --------------------------------- */
 
 
@@ -65,8 +63,9 @@ static poolInfo_t* obtenerPoolPorTam (uint8_t tam);
 
 QueueHandle_t queMayusculizar;
 QueueHandle_t queMinusculizar;
-// QueueHandle_t queMayusculizados;
-// QueueHandle_t queMinusculizados;
+
+QueueHandle_t queMedirPerformance;
+
 QueueHandle_t queTransmision;
 
 /* ---------------------------- pools de memoria --------------------------------- */
@@ -80,17 +79,20 @@ static uint8_t poolMemoriaM[POOL_MEMORIA_M_T]; /* Espacio de almacenamiento para
 QMPool memPoolL;
 static uint8_t poolMemoriaL[POOL_MEMORIA_L_T]; /* Espacio de almacenamiento para el Pool */
 
+QMPool memPoolToken;
+static uint8_t poolMemoriaToken[POOL_MEMORIA_TOKEN_T]; /* Espacio de almacenamiento para el Pool de tokens */
+
 /* ---------------------------- variables globales --------------------------------- */
 
 estadoRecepcion_t estadoRecepcion;
 colaCeldaPool_t celdasPools;
 
 
+// inicializo id de paquete en cero como variable global
+uint32_t idPaqueteAutonum = 0;
+
 
 /* ---------------------------- implementacion de funciones --------------------------------- */
-
-
-
 
 /**
  * C++ version 0.4 char* style "itoa":
@@ -240,9 +242,7 @@ int32_t inicializarQueues (void) {
 
   queMayusculizar = xQueueCreate (QUEUE_MAYUSCULIZAR_L, sizeof(poolInfo_t*));
   queMinusculizar = xQueueCreate (QUEUE_MINUSCULIZAR_L, sizeof(poolInfo_t*));
-  // queMayusculizados = xQueueCreate (QUEUE_MAYUSCULIZADOS_L, sizeof(poolInfo_t*));
-  // queMinusculizados = xQueueCreate (QUEUE_MINUSCULIZADOS_L, sizeof(poolInfo_t*));
-  queTransmision = xQueueCreate (QUEUE_MINUSCULIZADOS_L, sizeof(poolInfo_t*));
+  queTransmision = xQueueCreate (QUEUE_TRANSMISION_L, sizeof(poolInfo_t*));
 
   return 0;
 }
@@ -263,6 +263,8 @@ int32_t inicializarRecibirPaquete (void) {
   QMPool_init(&memPoolS, poolMemoriaS, sizeof(poolMemoriaS), POOL_MEMORIA_S_TBLOQUE);
   QMPool_init(&memPoolM, poolMemoriaM, sizeof(poolMemoriaM), POOL_MEMORIA_M_TBLOQUE);
   QMPool_init(&memPoolL, poolMemoriaL, sizeof(poolMemoriaL), POOL_MEMORIA_L_TBLOQUE);
+
+  QMPool_init(&memPoolToken, poolMemoriaToken, sizeof(poolMemoriaToken), POOL_MEMORIA_TOKEN_TBLOQUE);
 
   inicializarColaCeldaPool(&celdasPools);
 
@@ -470,6 +472,9 @@ static uint8_t enviarPaqueteMedicionHeap (uint8_t*buf) {
  */
 void tareaRecibirPaquete (void* taskParam) {
 
+
+  uint32_t tiempo_de_llegada_temp;       // tiempo que se recibió el primer byte de paquete (STX) temporal hasta reservar pool
+  uint32_t tiempo_de_recepcion_temp;     // tiempo que se recibió el último byte de paquete (ETX) temporal hasta reservar el pool
   // variable temporal del byte recibido
   uint8_t byteRecibido;
   // contador de bytes recibidos y tamaño total
@@ -501,6 +506,7 @@ void tareaRecibirPaquete (void* taskParam) {
 
         if(byteRecibido == PRT_STX) {
             estadoRecepcion = RECIBIR_OP;
+            tiempo_de_llegada_temp = MEDIR_TIEMPO();
         }
         else {
             estadoRecepcion = RECIBIR_STX;
@@ -560,12 +566,29 @@ void tareaRecibirPaquete (void* taskParam) {
 
 
         if(byteRecibido == PRT_ETX) {
+          tiempo_de_recepcion_temp = MEDIR_TIEMPO();
           *pDatos = PRT_ETX;
+
+          // reservo un lugar en el pool de tokens y copio el puntero
+          poolObtenido->token = QMPool_get(&memPoolToken, 0UL);
+
+          // guardo los tiempos que ya tengo medidos recien y valores que ya conozco:
+          poolObtenido->token->tiempo_de_llegada = tiempo_de_llegada_temp;
+          poolObtenido->token->tiempo_de_recepcion = tiempo_de_recepcion_temp;
+          poolObtenido->token->id_de_paquete = idPaqueteAutonum;
+          poolObtenido->token->payload = pDatos;
+          poolObtenido->token->largo_del_paquete = tam + PRT_BYTES_PROTCOLO;
+          poolObtenido->token->memoria_alojada = poolObtenido->tPool;
+
+          idPaqueteAutonum++;
+
           procesarDatos(poolObtenido, operacion);
+
         }
         else
           liberarPoolMasReciente();
           // si no recibí ETX, descarto los datos recibidos
+          // esta funcion no libera pool de token porque no llega a asignarse.
 
 
         estadoRecepcion = RECIBIR_STX;
