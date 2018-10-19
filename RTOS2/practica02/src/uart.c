@@ -135,23 +135,17 @@ int32_t configurarUARTModoBytes ( uart_t*uartN) {
 
 void tareaTransmisionUART (void* taskParam ) {
   poolInfo_t*itemQueue;
-  uint8_t largoBuf;
 
-  uint8_t bufStack[PRT_TAM_PAQ_REPSTACK];
-  UBaseType_t stackMedido;
   while(1) {
 
       xQueueReceive(queTransmision, &itemQueue, portMAX_DELAY);
 
+      itemQueue->token->tiempo_de_salida = MEDIR_TIEMPO();
       descargarBufferEnFIFOUARTTx(uartPC.perif, itemQueue->buf, itemQueue->bufL);
+      itemQueue->token->tiempo_de_transmision = MEDIR_TIEMPO();
 
-      // una vez que procese los datos, libero el pool recibido
-      liberarPoolMasAntiguo();
+      // hacer callback para que la tarea de tx d ela uart avise cuadno termino
 
-      // mido maximo de stack, armo paquete y tiro
-      stackMedido = uxTaskGetStackHighWaterMark(NULL);
-      largoBuf = armarPaqueteMedicionStack(bufStack, stackMedido);
-      descargarBufferEnFIFOUARTTx(uartPC.perif, bufStack, largoBuf);
   }
 
 }

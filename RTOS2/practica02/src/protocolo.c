@@ -298,40 +298,6 @@ void tareaMayusculizar (void*taskPtr) {
 
 }
 
-/**
- * @fn void tareaEnviarMayusculizados (void*taskPtr)
- *
- * @brief tarea que espera bloqueada una queue con datos en mayuscula
- */
-
-/*
-void tareaEnviarMayusculizados (void*taskPtr) {
-
-  poolInfo_t*itemQueue;
-  uint8_t largoBuf;
-
-  uint8_t bufStack[PRT_TAM_PAQ_REPSTACK];
-  UBaseType_t stackMedido;
-
-  while( TRUE ) {
-
-      // espero recibir cadena con mayusculas mientras estoy bloqueado
-      xQueueReceive(queMayusculizados, &itemQueue, portMAX_DELAY);
-
-      // funcion que vacia buffer en fifo de tx de la uart a medida que se va vaciando.
-      // vuelve cuando termino
-      descargarBufferEnFIFOUARTTx(uartPC.perif, itemQueue->buf, itemQueue->bufL);
-
-      // una vez que procese los datos, libero el pool recibido
-      liberarPoolMasAntiguo();
-
-
-      // mido maximo de stack, armo paquete y tiro
-      stackMedido = uxTaskGetStackHighWaterMark(NULL);
-      largoBuf = armarPaqueteMedicionStack(bufStack, stackMedido);
-      descargarBufferEnFIFOUARTTx(uartPC.perif, bufStack, largoBuf);
-  }
-}*/
 
 
 /**
@@ -346,7 +312,9 @@ void tareaMinusculizar (void*taskPtr) {
   poolInfo_t*itemQueue;
 
   uint8_t i;
-
+  uint8_t bufStack[PRT_TAM_PAQ_REPSTACK];
+  UBaseType_t stackMedido;
+  uint8_t largoBuf;
   while( TRUE ) {
 
       xQueueReceive(queMinusculizar, &itemQueue, portMAX_DELAY);
@@ -357,43 +325,48 @@ void tareaMinusculizar (void*taskPtr) {
 
       xQueueSend(queTransmision, &itemQueue, portMAX_DELAY);
 
-  }
+      // mido maximo de stack, armo paquete y tiro
+      stackMedido = uxTaskGetStackHighWaterMark(NULL);
+      largoBuf = armarPaqueteMedicionStack(bufStack, stackMedido);
 
-}
-
-/**
- * @fn void tareaEnviarMinusculizados (void*taskPtr)
- *
- * @brief tarea que espera bloqueada una queue con datos en minuscula
- */
-/*
-void tareaEnviarMinusculizados (void*taskPtr) {
-
-  poolInfo_t*itemQueue;
-
-  uint8_t largoBuf;
-
-  uint8_t bufStack[PRT_TAM_PAQ_REPSTACK];
-  UBaseType_t stackMedido;
-
-  while( TRUE ) {
-
-      // espero recibir cadena con mayusculas mientras estoy bloqueado
-      xQueueReceive(queMinusculizados, &itemQueue, portMAX_DELAY);
-
-      // funcion que vacia buffer en fifo de tx de la uart a medida que se va vaciando.
-      // vuelve cuando termino
-      descargarBufferEnFIFOUARTTx(uartPC.perif, itemQueue->buf, itemQueue->bufL);
 
       // una vez que procese los datos, libero el pool recibido
       liberarPoolMasAntiguo();
 
-      // mido maximo de stack, armo paquete y tiro
-      stackMedido = uxTaskGetStackHighWaterMark(NULL);
-      largoBuf = armarPaqueteMedicionStack(bufStack, stackMedido);
-      descargarBufferEnFIFOUARTTx(uartPC.perif, bufStack, largoBuf);
   }
-}*/
+
+}
+/**
+ * @fn void tareaMedirPerformance (void*taskPtr)
+ *
+ * @brief tarea que espera bloqueada una queue para pasar caracteres en minus a mayus y
+ *        ponerlo en una cola de salida
+ */
+
+void tareaMedirPerformance (void*taskPtr) {
+
+  poolInfo_t*itemQueue;
+
+  uint8_t i;
+
+  while( TRUE ) {
+
+      xQueueReceive(queMedirPerformance, &itemQueue, portMAX_DELAY);
+
+      itemQueue->token->tiempo_de_inicio = MEDIR_TIEMPO();
+
+      for(i = PRT_DAT_INI_I; i < (itemQueue->bufL - 1); i++ )
+          if( (itemQueue->buf[i] >= 'a') && (itemQueue->buf[i] <= 'z') )
+            itemQueue->buf[i] -= 'a' - 'A';
+
+      itemQueue->token->tiempo_de_fin = MEDIR_TIEMPO();
+      xQueueSend(queTransmision, &itemQueue, portMAX_DELAY);
+
+  }
+
+}
+
+
 /**
  * @fn void armarPaqueteMedicionStack (uint8_t*buf)
  *
@@ -569,17 +542,16 @@ void tareaRecibirPaquete (void* taskParam) {
           tiempo_de_recepcion_temp = MEDIR_TIEMPO();
           *pDatos = PRT_ETX;
 
-          // reservo un lugar en el pool de tokens y copio el puntero
-          poolObtenido->token = QMPool_get(&memPoolToken, 0UL);
-
-          // guardo los tiempos que ya tengo medidos recien y valores que ya conozco:
-          poolObtenido->token->tiempo_de_llegada = tiempo_de_llegada_temp;
-          poolObtenido->token->tiempo_de_recepcion = tiempo_de_recepcion_temp;
-          poolObtenido->token->id_de_paquete = idPaqueteAutonum;
-          poolObtenido->token->payload = pDatos;
-          poolObtenido->token->largo_del_paquete = tam + PRT_BYTES_PROTCOLO;
-          poolObtenido->token->memoria_alojada = poolObtenido->tPool;
-
+          if(operacion == PRT_PERF) {
+            // guardo los tiempos que ya tengo medidos recien y valores que ya conozco:
+            poolObtenido->token->tiempo_de_llegada = tiempo_de_llegada_temp;
+            poolObtenido->token->tiempo_de_recepcion = tiempo_de_recepcion_temp;
+            poolObtenido->token->id_de_paquete = idPaqueteAutonum;
+            poolObtenido->token->payload = pDatos;
+            poolObtenido->token->largo_del_paquete = tam + PRT_BYTES_PROTCOLO;
+            poolObtenido->token->memoria_alojada = poolObtenido->tPool;
+          }
+          // el id de paquete se incrementa siempre por más que no sea de medir performance
           idPaqueteAutonum++;
 
           procesarDatos(poolObtenido, operacion);
@@ -644,6 +616,9 @@ static uint32_t liberarPoolMasReciente (void) {
     if(poolObtenido == NULL)
       while(1);
 
+    // libero pool asociado a token
+    QMPool_put(&memPoolToken, poolObtenido->token);
+    // libero pool asociado al paquete
     QMPool_put(poolObtenido->ctrlPool, poolObtenido->buf);
 
     return 0;
@@ -665,6 +640,9 @@ uint32_t liberarPoolMasAntiguo (void) {
     if(poolObtenido == NULL)
       while(1);
 
+    // libero pool asociado a token
+    QMPool_put(&memPoolToken, poolObtenido->token);
+    // libero pool asociado a paquete
     QMPool_put(poolObtenido->ctrlPool, poolObtenido->buf);
 
     return 0;
@@ -707,6 +685,10 @@ static poolInfo_t* obtenerPoolPorTam (uint8_t tam) {
     poolObtenido->ctrlPool = &memPoolL;
     poolObtenido->tPool = grande;
   }
+
+  // reservo un lugar en el pool de tokens y copio el puntero
+  poolObtenido->token = QMPool_get(&memPoolToken, 0UL);
+
   return poolObtenido;
 }
 
@@ -730,6 +712,9 @@ static int32_t procesarDatos(poolInfo_t*poolAsociado, op_t op) {
     case PRT_REPHEAP:
       break;
     case PRT_MSJEST:
+      break;
+    case PRT_PERF:
+      xQueueSend(queMedirPerformance, &poolAsociado, portMAX_DELAY);
       break;
     default:
       return -1;
