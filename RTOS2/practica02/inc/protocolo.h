@@ -108,7 +108,6 @@ typedef struct {
 
 typedef struct {
   uint32_t id_de_paquete;           // identificacion de tránsito de paq. por el sistema. Autonumérico
-  uint8_t* payload;                 // puntero a paquete de datos a procesar
   uint32_t tiempo_de_llegada;       // tiempo que se recibió el primer byte de paquete (STX)
   uint32_t tiempo_de_recepcion;     // tiempo que se recibió el último byte de paquete (ETX)
   uint32_t tiempo_de_inicio;        // tiempo que se extrae el puntero al paquete en la tarea mayusculizar o minusculizar
@@ -117,7 +116,16 @@ typedef struct {
   uint32_t tiempo_de_transmision;   // tiempo que se transmitió el ultimo byte de paquete (ETX)
   uint16_t largo_del_paquete;       // largo total del paquete recibido (largo del dato MAS largo del header)
   uint16_t memoria_alojada;         // tamaño del bloque extraido del pool de memoria del sistema para el bloque
+  uint8_t* payload;                 // puntero a paquete de datos a procesar
+
 } token_t;
+
+
+/** @brief union para leer el token como buffer */
+typedef union {
+  token_t token;
+  uint8_t buf[sizeof(token_t)];
+}tokenBuf_t;
 
 
 /**

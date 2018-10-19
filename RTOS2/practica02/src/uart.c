@@ -52,7 +52,8 @@ int32_t inicializarStructUart (uart_t*uart, uartMap_t perif, uint32_t baudrate) 
   uart->tx_thre = xSemaphoreCreateBinary();
   // arranco con el semaforo libre.
   xSemaphoreGive(uart->tx_thre);
-  // uart->modo = MODO_BYTES;
+  // cola de datos para devolver id
+  uart->queTokenACT = xQueueCreate( QUEUE_UART_L, sizeof(uint32_t));
   return 0;
 }
 
@@ -93,59 +94,44 @@ int32_t configurarUARTModoBytes ( uart_t*uartN) {
   taskEXIT_CRITICAL();
 }
 
-
-
-
 /**
- * @fn int32_t descargarBufferEnFIFOUARTTx (uartMap_t uartPerif, const char* buf, uint8_t n)
+ * @fn void tareaTransmisionUART (void* taskParam )
  *
- * @brief descargo datos en fifo de tx en tramos del tamaño de la FIFO
+ * @brief tarea bloqueadea por queTransmision que descarga en fifo de la UART tx
+ *        y avisa mediante un callback
+ *
  */
-//
-//int32_t descargarBufferEnFIFOUARTTx (uartMap_t uartPerif, const char* buf, uint8_t n) {
-//
-//  uint8_t j;
-//  int32_t i = 0;
-//
-//  // espero a tener arriba el bit el THRE(transmit holding register empty)
-//  while(!(Chip_UART_ReadLineStatus( lpcUarts[uartPerif].uartAddr ) & UART_LSR_THRE));
-//
-//  //xSemaphoreTake(uartPC.txMutex, portMAX_DELAY);
-//
-//  // paso a vaciar el buffer sobre la fifo
-//  for(j = 0; j < n; j++) {
-//
-//      Chip_UART_SendByte(lpcUarts[uartPerif].uartAddr, *buf );
-//      buf++;
-//      i++;
-//
-//      if((i + 1) >=  FIFO_UART_L) {
-//          while(!(Chip_UART_ReadLineStatus( lpcUarts[uartPerif].uartAddr ) & UART_LSR_THRE));
-//          //xSemaphoreTake(uartPC.txMutex, portMAX_DELAY);
-//          i = 0;
-//      }
-//
-//    }
-//
-//}
-
-
-
 
 
 void tareaTransmisionUART (void* taskParam ) {
   poolInfo_t*itemQueue;
 
+  uint8_t j;
+  int32_t i = 0;
+
+
   while(1) {
 
-      xQueueReceive(queTransmision, &itemQueue, portMAX_DELAY);
+    xQueueReceive(queTransmision, &itemQueue, portMAX_DELAY);
+    i = 0;
+    // intento tomar semaforo de thre
+    xSemaphoreTake(uartPC.tx_thre, portMAX_DELAY);
 
-      itemQueue->token->tiempo_de_salida = MEDIR_TIEMPO();
-      descargarBufferEnFIFOUARTTx(uartPC.perif, itemQueue->buf, itemQueue->bufL);
-      itemQueue->token->tiempo_de_transmision = MEDIR_TIEMPO();
+    // paso a vaciar el buffer sobre la fifo
+    for(j = 0; j < itemQueue->bufL; j++) {
 
-      // hacer callback para que la tarea de tx d ela uart avise cuadno termino
+     if((i + 1) >=  FIFO_UART_L){
+         xSemaphoreTake(uartPC.tx_thre, portMAX_DELAY);
+         i = 0;
+     }
 
+     Chip_UART_SendByte(lpcUarts[uartPC.perif].uartAddr, itemQueue->buf[j]);
+     i++;
+    }
+
+    // cuando termine de mandar, aviso usando el id del token
+    xQueueSend(uartPC.queTokenACT, &(itemQueue->token->id_de_paquete), portMAX_DELAY);
+    // descargarBufferEnFIFOUARTTx(uartPC.perif, itemQueue->buf, itemQueue->bufL);
   }
 
 }
@@ -178,36 +164,6 @@ int32_t descargarBufferEnFIFOUARTTx (uartMap_t uartPerif, const uint8_t* buf, ui
   }
 }
 
-/**
- * @fn void tareaEnviarDatosUART ( void* taskParmPtr )
- *
- * @brief envio lo que esta en la cola Tx
- *
- */
-//
-//void tareaEnviarDatosUART ( void* uartN ) {
-//
-//
-//  uart_t* uartCast;
-//
-//  uartCast = uartN;
-//
-//  while (TRUE) {
-//
-//      xQueueReceive(uartCast->queueTxUART, &itemColaUART, portMAX_DELAY);
-//      descargarStringEnFIFOUARTTx(uartCast->perif, itemColaUART.mensaje);
-//  }
-//
-//}
-
-
-
-/**
- * @fn void uartCallbackComun(uartMap_t uart)
- *
- * @brief handler de la uart PC
- *
- */
 
 __attribute__ ((section(".after_vectors")))
 

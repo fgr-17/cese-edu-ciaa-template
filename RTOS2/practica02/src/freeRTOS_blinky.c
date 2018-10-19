@@ -77,7 +77,7 @@ int main(void)
 
    xTaskCreate(tareaMinusculizar,(const char *)"minusc", configMINIMAL_STACK_SIZE, (void*) 0, tskIDLE_PRIORITY+2, 0);
 
-   xTaskCreate(tareaTransmisionUART,(const char *)"salidaUART", configMINIMAL_STACK_SIZE, (void*) 0, tskIDLE_PRIORITY+1, 0);
+   xTaskCreate(tareaTransmisionUART,(const char *)"salidaUART", configMINIMAL_STACK_SIZE, (void*) 0, tskIDLE_PRIORITY+4, 0);
 
 
 
