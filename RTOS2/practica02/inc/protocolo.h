@@ -111,6 +111,9 @@ typedef struct {
   uint16_t memoria_alojada;         // tamaño del bloque extraido del pool de memoria del sistema para el bloque
 }performance_t;
 
+/** @brief cantidad de bytes que mando cuando informo el stack */
+#define PRT_TAM_PAQ_PERF                  (PRT_BYTES_PROTCOLO + sizeof(performance_t))
+
 
 /** @brief union para leer los tiempos como buffer */
 typedef union {
@@ -160,7 +163,6 @@ extern void tareaMedirPerformance (void*taskPtr);
 extern void tareaRecibirPaquete (void* taskParam);
 
 extern uint32_t liberarPoolMasAntiguo (void);
-extern uint8_t armarPaqueteMedicionStack (uint8_t*buf, UBaseType_t stackMedido);
 
 /* ---------------------------- variables globales --------------------------------- */
 extern QueueHandle_t queTransmision;

@@ -42,9 +42,10 @@ void tareaMinusculizar (void*taskPtr);
 void tareaMedirPerformance (void*taskPtr);
 
 uint32_t liberarPoolMasAntiguo (void);
-uint8_t armarPaqueteMedicionStack (uint8_t*buf, UBaseType_t stackMedido);
 
+static uint8_t armarPaqueteMedicionStack (uint8_t*buf, UBaseType_t stackMedido);
 static uint8_t armarPaqueteMedicionHeap (uint8_t*buf);
+static uint8_t armarPaqueteMedicionPerformance (uint8_t*buf, performance_t medPerformance);
 
 static int32_t validarOP (op_t op);
 static int32_t procesarDatos(poolInfo_t*poolAsociado, op_t op);
@@ -413,7 +414,7 @@ void tareaMedirPerformance (void*taskPtr) {
   UBaseType_t stackMedido;
   token_t tokenR;
 
-  uint8_t bufStack[PRT_TAM_PAQ_REPSTACK];
+  uint8_t bufPerformance[PRT_TAM_PAQ_PERF];
 
   while( TRUE ) {
 
@@ -438,12 +439,16 @@ void tareaMedirPerformance (void*taskPtr) {
     // cuando salí, es porque el token es para mí
     xQueueReceive(uartPC.queTokenACT, &tokenR, portMAX_DELAY);
 
+
+
+
+
     // asigno el puntero payload al buffer local
-    itemQueue->token->payload = bufStack;
+    itemQueue->token->payload = bufPerformance;
     // mido maximo de stack, armo paquete y tiro
     stackMedido = uxTaskGetStackHighWaterMark(NULL);
     // sobreescribo el mismo token que antes
-    itemQueue->token->largo_del_paquete = armarPaqueteMedicionStack(itemQueue->token->payload, stackMedido);
+    itemQueue->token->largo_del_paquete = armarPaqueteMedicionPerformance(itemQueue->token->payload, itemQueue->mperf);
     // mando info de stack
     xQueueSend(uartPC.queTransmision, itemQueue->token, portMAX_DELAY);
 
@@ -468,8 +473,6 @@ void tareaMedirPerformance (void*taskPtr) {
  * @brief paquete que mide el máximo historico del stack y arma el paquete
  *
  */
-
-
 
 uint8_t armarPaqueteMedicionStack (uint8_t*buf, UBaseType_t stackMedido) {
 
@@ -529,6 +532,37 @@ static uint8_t armarPaqueteMedicionHeap (uint8_t*buf) {
   buf[PRT_DAT_INI_I + heapStringLargo] = PRT_ETX;
 
   return (PRT_BYTES_PROTCOLO + heapStringLargo);
+
+}
+/**
+ * @fn void armarPaqueteMedicionStack (uint8_t*buf)
+ *
+ * @brief paquete que mide el máximo historico del stack y arma el paquete
+ *
+ */
+
+uint8_t armarPaqueteMedicionPerformance (uint8_t*buf, performance_t medPerformance) {
+
+  uint8_t perfStringLargo, i;
+
+  performanceBuf_t perfBuf;
+
+  // copio a la union para leer como buffer
+  perfBuf.mperf = medPerformance;
+  // cantidad de bytes de medicion de performance
+  perfStringLargo = sizeof(performance_t);
+
+  // copio encabezado del paquete
+  buf[PRT_STX_I] = PRT_STX;
+  buf[PRT_OP_I] = PRT_PERF;
+  buf[PRT_TAM_I] = (uint8_t) perfStringLargo;
+
+  for(i = 0; i < perfStringLargo; i++)
+      buf[PRT_DAT_INI_I+i] = perfBuf.buf[i];
+
+  buf[PRT_DAT_INI_I + perfStringLargo] = PRT_ETX;
+
+  return (PRT_BYTES_PROTCOLO + perfStringLargo);
 
 }
 
