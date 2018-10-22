@@ -37,10 +37,9 @@ char* itoa(int value, char* result, int base);
 int32_t inicializarRecibirPaquete (void);
 
 void tareaMayusculizar (void*taskPtr);
-void tareaEnviarMayusculizados (void*taskPtr);
 void tareaRecibirPaquete (void* taskParam);
 void tareaMinusculizar (void*taskPtr);
-void tareaEnviarMinusculizados (void*taskPtr);
+void tareaMedirPerformance (void*taskPtr);
 
 uint32_t liberarPoolMasAntiguo (void);
 uint8_t armarPaqueteMedicionStack (uint8_t*buf, UBaseType_t stackMedido);
@@ -242,7 +241,7 @@ int32_t inicializarQueues (void) {
 
   queMayusculizar = xQueueCreate (QUEUE_MAYUSCULIZAR_L, sizeof(poolInfo_t*));
   queMinusculizar = xQueueCreate (QUEUE_MINUSCULIZAR_L, sizeof(poolInfo_t*));
-
+  queMedirPerformance = xQueueCreate (QUEUE_MINUSCULIZAR_L, sizeof(poolInfo_t*));
   return 0;
 }
 
@@ -414,8 +413,7 @@ void tareaMedirPerformance (void*taskPtr) {
   UBaseType_t stackMedido;
   token_t tokenR;
 
-  uint8_t bufPerformance[sizeof(performance_t) + PRT_TAM_PAQ_REPSTACK];
-
+  uint8_t bufStack[PRT_TAM_PAQ_REPSTACK];
 
   while( TRUE ) {
 
@@ -426,6 +424,7 @@ void tareaMedirPerformance (void*taskPtr) {
           itemQueue->buf[i] -= 'a' - 'A';
 
     itemQueue->mperf.tiempo_de_fin = MEDIR_TIEMPO();
+    // itemQueue->token->tiempo_de_salida = MEDIR_TIEMPO();
 
     xQueueSend(uartPC.queTransmision, itemQueue->token, portMAX_DELAY);
     // pongo token en un valor no válido
@@ -434,19 +433,32 @@ void tareaMedirPerformance (void*taskPtr) {
     while(tokenR.id_de_paquete != itemQueue->token->id_de_paquete) {
       xQueuePeek(uartPC.queTokenACT, &tokenR, portMAX_DELAY);
       // mido tiempo fin de transmision
-      itemQueue->mperf.tiempo_de_transmision = MEDIR_TIEMPO();
+      // itemQueue->token->tiempo_de_transmision = MEDIR_TIEMPO();
     }
     // cuando salí, es porque el token es para mí
     xQueueReceive(uartPC.queTokenACT, &tokenR, portMAX_DELAY);
 
+    // asigno el puntero payload al buffer local
+    itemQueue->token->payload = bufStack;
+    // mido maximo de stack, armo paquete y tiro
+    stackMedido = uxTaskGetStackHighWaterMark(NULL);
+    // sobreescribo el mismo token que antes
+    itemQueue->token->largo_del_paquete = armarPaqueteMedicionStack(itemQueue->token->payload, stackMedido);
+    // mando info de stack
+    xQueueSend(uartPC.queTransmision, itemQueue->token, portMAX_DELAY);
 
-
+    // pongo token en un valor no válido
+    tokenR.id_de_paquete= 0xFFFFFFFF;
+    // insisto mientras que el token recibido no sea para mí
+    while(tokenR.id_de_paquete != itemQueue->token->id_de_paquete) {
+      xQueuePeek(uartPC.queTokenACT, &tokenR, portMAX_DELAY);
+    }
+    // cuando salí, es porque el token es para mí
+    xQueueReceive(uartPC.queTokenACT, &tokenR, portMAX_DELAY);
 
     // una vez que procese los datos, libero el pool recibido
     liberarPoolMasAntiguo();
-
   }
-
 }
 
 
