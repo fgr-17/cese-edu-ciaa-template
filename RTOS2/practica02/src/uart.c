@@ -53,7 +53,9 @@ int32_t inicializarStructUart (uart_t*uart, uartMap_t perif, uint32_t baudrate) 
   // arranco con el semaforo libre.
   xSemaphoreGive(uart->tx_thre);
   // cola de datos para devolver id
-  uart->queTokenACT = xQueueCreate( QUEUE_UART_L, sizeof(uint32_t));
+  uart->queTokenACT = xQueueCreate( QUEUE_UART_L, sizeof(token_t));
+  // inicializo cola de transmision
+  uart->queTransmision = xQueueCreate (QUEUE_TRANSMISION_L, sizeof(token_t));
   return 0;
 }
 
@@ -104,7 +106,8 @@ int32_t configurarUARTModoBytes ( uart_t*uartN) {
 
 
 void tareaTransmisionUART (void* taskParam ) {
-  poolInfo_t*itemQueue;
+
+  token_t token;
 
   uint8_t j;
   int32_t i = 0;
@@ -112,26 +115,25 @@ void tareaTransmisionUART (void* taskParam ) {
 
   while(1) {
 
-    xQueueReceive(queTransmision, &itemQueue, portMAX_DELAY);
+    xQueueReceive(uartPC.queTransmision, &token, portMAX_DELAY);
     i = 0;
     // intento tomar semaforo de thre
     xSemaphoreTake(uartPC.tx_thre, portMAX_DELAY);
 
     // paso a vaciar el buffer sobre la fifo
-    for(j = 0; j < itemQueue->bufL; j++) {
+    for(j = 0; j < token.largo_del_paquete; j++) {
 
      if((i + 1) >=  FIFO_UART_L){
          xSemaphoreTake(uartPC.tx_thre, portMAX_DELAY);
          i = 0;
      }
 
-     Chip_UART_SendByte(lpcUarts[uartPC.perif].uartAddr, itemQueue->buf[j]);
+     Chip_UART_SendByte(lpcUarts[uartPC.perif].uartAddr, token.payload[j]);
      i++;
     }
 
     // cuando termine de mandar, aviso usando el id del token
-    xQueueSend(uartPC.queTokenACT, &(itemQueue->token->id_de_paquete), portMAX_DELAY);
-    // descargarBufferEnFIFOUARTTx(uartPC.perif, itemQueue->buf, itemQueue->bufL);
+    xQueueSend(uartPC.queTokenACT, &token, portMAX_DELAY);
   }
 
 }
@@ -142,7 +144,7 @@ void tareaTransmisionUART (void* taskParam ) {
  * @brief descargo datos en fifo de tx en tramos del tamaño de la FIFO
  */
 
-
+/*
 int32_t descargarBufferEnFIFOUARTTx (uartMap_t uartPerif, const uint8_t* buf, uint8_t n) {
 
   uint8_t j;
@@ -163,7 +165,7 @@ int32_t descargarBufferEnFIFOUARTTx (uartMap_t uartPerif, const uint8_t* buf, ui
     i++;
   }
 }
-
+*/
 
 __attribute__ ((section(".after_vectors")))
 

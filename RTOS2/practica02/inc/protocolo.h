@@ -92,40 +92,31 @@ typedef enum {chico = POOL_MEMORIA_S_TBLOQUE, medio = POOL_MEMORIA_M_TBLOQUE, gr
 
 typedef enum {COLA_CELDA_POOL_LLENO, COLA_CELDA_POOL_VACIO, COLA_CELDA_POOL_NORMAL} estadoColaPool_t;
 
-/**
- * @brief campos de inicio del paquete
- */
-typedef struct {
-
-  uint8_t stx_byte;
-  uint8_t op_byte;
-  uint8_t tam_byte;
-
-}paqCampos_t;
-
 
 /** @brief estructura de token */
 
 typedef struct {
   uint32_t id_de_paquete;           // identificacion de tránsito de paq. por el sistema. Autonumérico
+  uint8_t* payload;                 // puntero a paquete de datos a procesar
+  uint32_t largo_del_paquete;       // largo del payload
+} token_t;
+
+typedef struct {
   uint32_t tiempo_de_llegada;       // tiempo que se recibió el primer byte de paquete (STX)
   uint32_t tiempo_de_recepcion;     // tiempo que se recibió el último byte de paquete (ETX)
   uint32_t tiempo_de_inicio;        // tiempo que se extrae el puntero al paquete en la tarea mayusculizar o minusculizar
   uint32_t tiempo_de_fin;           // tiempo que se pone el puntero a paquete en la tarea queMayusculizar
   uint32_t tiempo_de_salida;        // tiempo que se transmitió el primer byte de paquete (STX)
   uint32_t tiempo_de_transmision;   // tiempo que se transmitió el ultimo byte de paquete (ETX)
-  uint16_t largo_del_paquete;       // largo total del paquete recibido (largo del dato MAS largo del header)
   uint16_t memoria_alojada;         // tamaño del bloque extraido del pool de memoria del sistema para el bloque
-  uint8_t* payload;                 // puntero a paquete de datos a procesar
-
-} token_t;
+}performance_t;
 
 
-/** @brief union para leer el token como buffer */
+/** @brief union para leer los tiempos como buffer */
 typedef union {
-  token_t token;
-  uint8_t buf[sizeof(token_t)];
-}tokenBuf_t;
+  performance_t mperf;
+  uint8_t buf[sizeof(performance_t)];
+} performanceBuf_t;
 
 
 /**
@@ -133,9 +124,13 @@ typedef union {
  */
 
 typedef struct {
-  uint8_t*buf;                      // puntero al inicio del pool
+
   token_t*token;                    // puntero al token
+
+  performance_t mperf;                // estructura para medicion de tiempo
+
   uint8_t bufL;                     // cantidad de datos válidos
+  uint8_t*buf;                      // puntero al inicio del pool
   tPool_t tPool;                    // tamaño del pool
   QMPool*ctrlPool;                  // estructura de control
 
