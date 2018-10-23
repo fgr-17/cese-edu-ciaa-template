@@ -82,7 +82,18 @@
 
 
 /** @brief macro para medir tiempo con resolucion 1ms (tick)*/
-#define MEDIR_TIEMPO()      xTaskGetTickCount()
+//  #define MEDIR_TIEMPO()      xTaskGetTickCount()
+#define MEDIR_TIEMPO()          cuentaTimer
+
+
+/** @brief defines de cuenta de timer */
+#define TIMER_CUENTA_PERFORMANCE            LPC_TIMER0
+#define TIMER_CUENTA_PERFORMANCE_IRQ        TIMER0_IRQn
+#define CUENTA_PREESCALER                   1
+/** @brief timer usado en notación de la sapi */
+#define TIMER_SAPI_INDICE                   0
+/** @brief resolución de medición de performance en microsegundos */
+#define TIMER_RESOLUCION_MPERF              1UL
 
 
 /* ---------------------------- tipos de dato --------------------------------- */
@@ -163,6 +174,9 @@ extern void tareaMedirPerformance (void*taskPtr);
 extern void tareaRecibirPaquete (void* taskParam);
 
 extern uint32_t liberarPoolMasAntiguo (void);
+
+extern int32_t inicializarTimer(void);
+extern void timerCallback (void*callbackParam);
 
 /* ---------------------------- variables globales --------------------------------- */
 extern QueueHandle_t queTransmision;

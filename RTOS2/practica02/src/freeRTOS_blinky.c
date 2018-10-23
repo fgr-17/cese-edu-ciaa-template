@@ -59,6 +59,7 @@ int main(void)
 {
   inicializarTareaEnviarDatosUARTs();
   inicializarRecibirPaquete();
+  inicializarTimer();
 
 //
 //   xTaskCreate(

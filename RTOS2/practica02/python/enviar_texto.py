@@ -172,7 +172,7 @@ with open( (args['nombre_archivo']), 'rt') as archivo:
 
     recibirHeap()
 
-    for j in range(10):
+    for j in range(2):
 
         time.sleep(1)
         print("\nvuelta nro: ", j, "\n")

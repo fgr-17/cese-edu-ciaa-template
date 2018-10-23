@@ -16,6 +16,7 @@
 
 #include <stdint.h>
 #include <string.h>
+
 #include "FreeRTOSConfig.h"
 #include "FreeRTOS.h"
 #include "task.h"
@@ -29,6 +30,7 @@
 #include "uart.h"
 
 #include "protocolo.h"
+#include "sapi_timer.h"
 /* ---------------------------- protocolos de funciones --------------------------------- */
 
 
@@ -59,6 +61,10 @@ static poolInfo_t* obtenerCeldaPoolParaDescartar(colaCeldaPool_t*colaCeldaPool);
 static uint32_t liberarPoolMasReciente (void);
 static poolInfo_t* obtenerPoolPorTam (uint8_t tam);
 
+
+int32_t inicializarTimer(void);
+void timerCallback (void*callbackParam);
+
 /* ---------------------------- colas de dato --------------------------------- */
 
 QueueHandle_t queMayusculizar;
@@ -88,10 +94,10 @@ static uint8_t poolMemoriaToken[POOL_MEMORIA_TOKEN_T]; /* Espacio de almacenamie
 estadoRecepcion_t estadoRecepcion;
 colaCeldaPool_t celdasPools;
 
-// inicializo id de paquete en cero como variable global
+/** @brief inicializo id de paquete en cero como variable global */
 uint32_t idPaqueteAutonum = 0;
-
-
+/** @brief variable global para cuenta de medicion de tiempos */
+uint32_t cuentaTimer = 0;
 /* ---------------------------- implementacion de funciones --------------------------------- */
 
 /**
@@ -425,8 +431,9 @@ void tareaMedirPerformance (void*taskPtr) {
           itemQueue->buf[i] -= 'a' - 'A';
 
     itemQueue->mperf.tiempo_de_fin = MEDIR_TIEMPO();
-    // itemQueue->token->tiempo_de_salida = MEDIR_TIEMPO();
 
+
+    itemQueue->mperf.tiempo_de_salida = MEDIR_TIEMPO();
     xQueueSend(uartPC.queTransmision, itemQueue->token, portMAX_DELAY);
     itemQueue->mperf.tiempo_de_transmision = MEDIR_TIEMPO();
     // pongo token en un valor no válido
@@ -863,14 +870,42 @@ static int32_t procesarDatos(poolInfo_t*poolAsociado, op_t op) {
 
 /* -------------------------- medicion de tiempo ------------------- */
 
-#define TIMER_CUENTA_PERFORMANCE            LPC_TIMER0
-#define CUENTA_PREESCALER                   1
+/**
+ * @fn int32_t inicializarTimer(void)
+ *
+ * @brief inicializo timer para medir performance con 1us
+ */
+int32_t inicializarTimer(void) {
 
-int32_t inicializarTimer() {
+  uint32_t cuentaTicksMedicion;
+  //Chip_TIMER_ReadCount(TIMER_CUENTA_PERFORMANCE);
+//
+//  Chip_TIMER_Init(TIMER_CUENTA_PERFORMANCE);
+//  Chip_TIMER_Reset(TIMER_CUENTA_PERFORMANCE);
+//  Chip_TIMER_PrescaleSet(TIMER_CUENTA_PERFORMANCE, CUENTA_PREESCALER);
+//
+//  Chip_TIMER_Enable(TIMER_CUENTA_PERFORMANCE);
+//  /* Enable timer interrupt */
+//  NVIC_SetPriority(TIMER_CUENTA_PERFORMANCE_IRQ, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY+1);
+//  NVIC_EnableIRQ(TIMER_CUENTA_PERFORMANCE_IRQ);
+//  NVIC_ClearPendingIRQ(TIMER_CUENTA_PERFORMANCE_IRQ);
+  cuentaTimer = 0;
 
-  Chip_TIMER_Init(TIMER_CUENTA_PERFORMANCE);
-  Chip_TIMER_Reset(TIMER_CUENTA_PERFORMANCE);
-  Chip_TIMER_PrescaleSet(TIMER_CUENTA_PERFORMANCE, CUENTA_PREESCALER);
+  cuentaTicksMedicion = Timer_microsecondsToTicks(TIMER_RESOLUCION_MPERF);
+  Timer_Init(TIMER_SAPI_INDICE, cuentaTicksMedicion, (callBackFuncPtr_t)timerCallback);
+
+
   return 0;
 }
 
+/**
+ * @fn void timerCallback (void*callbackParam)
+ *
+ * @brief callback para cuando termina de contar el timer
+ */
+
+void timerCallback (void*callbackParam) {
+
+  cuentaTimer++;
+  return;
+}
