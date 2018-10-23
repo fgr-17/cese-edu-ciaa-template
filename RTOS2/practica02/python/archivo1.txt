@@ -1,0 +1,3 @@
+primer linea con mas de 64 caracteres para forzar que use el pool mas largo
+linea corta
+ahora una linea con mas de 16 valores

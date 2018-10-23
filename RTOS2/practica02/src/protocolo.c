@@ -428,6 +428,7 @@ void tareaMedirPerformance (void*taskPtr) {
     // itemQueue->token->tiempo_de_salida = MEDIR_TIEMPO();
 
     xQueueSend(uartPC.queTransmision, itemQueue->token, portMAX_DELAY);
+    itemQueue->mperf.tiempo_de_transmision = MEDIR_TIEMPO();
     // pongo token en un valor no válido
     tokenR.id_de_paquete = 0xFFFFFFFF;
     // insisto mientras que el token recibido no sea para mí
@@ -605,8 +606,6 @@ void tareaRecibirPaquete (void* taskParam) {
     xQueuePeek(uartPC.queTokenACT, &tokenR, portMAX_DELAY);
     if(tokenR.id_de_paquete == token.id_de_paquete)
       xQueueReceive(uartPC.queTokenACT, &tokenR, portMAX_DELAY);
-    // descargarBufferEnFIFOUARTTx(uartPC.perif, bufHeap, largoBufHeap);
-
   }
 
   while(TRUE) {
@@ -861,4 +860,17 @@ static int32_t procesarDatos(poolInfo_t*poolAsociado, op_t op) {
 
 }
 
+
+/* -------------------------- medicion de tiempo ------------------- */
+
+#define TIMER_CUENTA_PERFORMANCE            LPC_TIMER0
+#define CUENTA_PREESCALER                   1
+
+int32_t inicializarTimer() {
+
+  Chip_TIMER_Init(TIMER_CUENTA_PERFORMANCE);
+  Chip_TIMER_Reset(TIMER_CUENTA_PERFORMANCE);
+  Chip_TIMER_PrescaleSet(TIMER_CUENTA_PERFORMANCE, CUENTA_PREESCALER);
+  return 0;
+}
 

@@ -57,7 +57,6 @@
 // FUNCION PRINCIPAL, PUNTO DE ENTRADA AL PROGRAMA LUEGO DE ENCENDIDO O RESET.
 int main(void)
 {
-
   inicializarTareaEnviarDatosUARTs();
   inicializarRecibirPaquete();
 
