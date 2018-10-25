@@ -33,6 +33,7 @@ typedef struct
 	delay_t delay;
 
 	gpioMap_t teclaPin;
+	int teclaN;
 
 	TickType_t tiempoPresionIni;
 	TickType_t tiempoPresionFin;
@@ -58,7 +59,7 @@ extern int inicializarQueuesFlancosyTeclas ( void );
 extern void tareaAntirreboteTEC1 ( void* taskParmPtr );
 extern void tareaAntirreboteTEC2 ( void* taskParmPtr );
 
-extern void inicializarAntirreboteMEF (antirreb_t*antirreb, gpioMap_t tecla_asigada );
+extern void inicializarAntirreboteMEF (antirreb_t*antirreb, gpioMap_t tecla_asigada, int teclaN );
 extern void antirreboteMEF (antirreb_t*antirreb);
 
 extern void manejadorEventosPulsador (Evento_t * evn);

@@ -68,6 +68,7 @@ def enviar_archivo(archivo, puerto, operacion):
     return i
 
 def mostrar_respuestas(puerto, n_lineas_esperadas):
+
     numeroByteRecibido = 0
     eco = bytes()
     j = 0
@@ -149,9 +150,30 @@ def recibirHeap():
 
             return
 
+def recibirPaquetesPulsacionesTeclas():
 
+    numeroByteRecibido = 0
+    eco = bytes()
 
+    while True:
 
+        char = puerto.read()
+
+        if numeroByteRecibido == 1:
+            operacion = char
+
+        numeroByteRecibido += 1
+        eco += char
+        if char == b'\xaa':
+            eco = eco.replace(b'\n', b'')
+            if operacion == b'\x06':
+                print("paquete de pulsacion")
+                print("tiempo de pulsacion: ", int.from_bytes(eco[3:7], byteorder='little', signed=False))
+                print("tecla pulsada: ", int.from_bytes(eco[7:11], byteorder='little', signed=False))
+                return
+            else:
+                print('Linea {}: 0x{:X}-{:02}-{:02}-{}-0x{:X}'.format(str(j).rjust(2), eco[0], eco[1], eco[2],
+                                                                  str(eco[3:-1], encoding='latin-1'), eco[-1]))
 
 #===============================================================================
     
@@ -181,6 +203,10 @@ with open( (args['nombre_archivo']), 'rt') as archivo:
         lineas_enviadas = enviar_archivo(archivo, puerto, args['operacion'])
         cartel_de_recepcion()
         mostrar_respuestas(puerto, lineas_enviadas*2)
+
+    while(True):
+        recibirPaquetesPulsacionesTeclas()
+
 
 #===============================================================================
 

@@ -16,9 +16,7 @@
 
 #include "sapi.h"        // <= Biblioteca sAPI
 
-
 #include "FrameworkEventos.h"
-
 
 #include "led.h"
 #include "antirreb.h"
@@ -26,12 +24,9 @@
 
 #include "uart.h"
 
-
-
-
 /* ---------------------- manejadores de eventos ---------------------------------- */
-int32_t inicializarManejadorEventoTec1 (void);
-void manejadorEventoLedTec1 (Evento_t * evn);
+int32_t inicializarManejadorEventoTec (void);
+void manejadorEventoLed (Evento_t * evn);
 
 /* ---------------------- variables globales ---------------------------------- */
 
@@ -48,82 +43,54 @@ xSemaphoreHandle semaforoLed2;
 /* -------------- */
 estadoLedTecX_t estadoLedTec1 = LEDTEC_INACTIVO;
 
+// el led azul no se debe prender nunca
+gpioMap_t ledsTeclas[] = {LEDB, LEDR, LED1, LED2, LED3};
 
 
 /* ---------------------- implementacion de funciones ---------------------------------- */
 
 /**
- * @file int32_t inicializarManejadorEventoTec1 (void)
+ * @file int32_t inicializarManejadorEventoTec (void)
  *
  * @brief pongo el manejador de eventos en su estado inicial
  */
-int32_t inicializarManejadorEventoTec1 (void) {
-  gpioWrite(LEDR, OFF);
-  estadoLedTec1 = LEDTEC_APAGADO;
+int32_t inicializarManejadorEventoTec (void) {
+  gpioWrite(ledsTeclas[0], OFF);
+  gpioWrite(ledsTeclas[1], OFF);
+  gpioWrite(ledsTeclas[2], OFF);
+  gpioWrite(ledsTeclas[3], OFF);
+  gpioWrite(ledsTeclas[4], OFF);
   return 0;
 
 }
 
 /**
- * @file void manejadorEventoLedTec1 (Evento_t * evn)
+ * @file void manejadorEventoLed (Evento_t * evn)
  *
  * @brief manejo de sgns
  */
-void manejadorEventoLedTec1 (Evento_t * evn) {
+void manejadorEventoLed (Evento_t * evn) {
 
-  switch(estadoLedTec1) {
-    case LEDTEC_INACTIVO:
+  int teclaPulsada;
 
-      switch(evn->signal){
+  switch(evn->signal){
 
-      case SIG_MODULO_INICIAR:
-        gpioWrite(LEDR, OFF);
-        estadoLedTec1 = LEDTEC_APAGADO;
-        break;
+  case SIG_MODULO_INICIAR:
+    inicializarManejadorEventoTec();
+    break;
 
-      default:
-        break;
+  case SIG_BOTON_PULSADO:
+    teclaPulsada = evn->valor;
+    gpioWrite(ledsTeclas[teclaPulsada], ON);
+    break;
 
-      }
-      break;
+  case SIG_BOTON_LIBERADO:
+    teclaPulsada = evn->valor;
+    gpioWrite(ledsTeclas[teclaPulsada], OFF);
+    break;
 
-    case LEDTEC_APAGADO:
-
-      switch(evn->signal){
-        case SIG_BOTON_PULSADO:
-          gpioWrite(LEDR, ON);
-          estadoLedTec1 = LEDTEC_ENCENDIDO;
-          break;
-
-        case SIG_BOTON_LIBERADO:
-          inicializarManejadorEventoTec1();
-          break;
-
-        default:
-          break;
-
-      }
-      break;
-
-    case LEDTEC_ENCENDIDO:
-
-      switch(evn->signal){
-      case SIG_BOTON_PULSADO:
-        break;
-      case SIG_BOTON_LIBERADO:
-        gpioWrite(LEDR, OFF);
-        estadoLedTec1 = LEDTEC_APAGADO;
-        break;
-      default:
-        inicializarManejadorEventoTec1();
-      }
-      break;
-
-    default:
-      inicializarManejadorEventoTec1();
-      break;
-
-
+  default:
+    inicializarManejadorEventoTec();
   }
 
 }

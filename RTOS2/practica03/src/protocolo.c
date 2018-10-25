@@ -27,10 +27,15 @@
 
 #include "qmpool.h"
 
+#include "FrameworkEventos.h"
+
+
 #include "uart.h"
 
 #include "protocolo.h"
 #include "sapi_timer.h"
+
+
 /* ---------------------------- protocolos de funciones --------------------------------- */
 
 
@@ -48,6 +53,7 @@ uint32_t liberarPoolMasAntiguo (void);
 static uint8_t armarPaqueteMedicionStack (uint8_t*buf, UBaseType_t stackMedido);
 static uint8_t armarPaqueteMedicionHeap (uint8_t*buf);
 static uint8_t armarPaqueteMedicionPerformance (uint8_t*buf, performance_t medPerformance);
+static uint8_t armarPaqueteInformeTecla (uint8_t*buf, TickType_t tiempoPulsacion, int tecla);
 
 static int32_t validarOP (op_t op);
 static int32_t procesarDatos(poolInfo_t*poolAsociado, op_t op);
@@ -65,6 +71,7 @@ static poolInfo_t* obtenerPoolPorTam (uint8_t tam);
 int32_t inicializarTimer(void);
 void timerCallback (void*callbackParam);
 
+void manejadorEventoUART (Evento_t * evn);
 /* ---------------------------- colas de dato --------------------------------- */
 
 QueueHandle_t queMayusculizar;
@@ -908,4 +915,89 @@ void timerCallback (void*callbackParam) {
 
   cuentaTimer++;
   return;
+}
+
+
+/* ------------------- informe de pulsacion por eventos ------------- *
+
+/**
+ * @fn void manejadorEventoUART (Evento_t * evn)
+ *
+ * @brief manejo eventos de teclas para enviar informe por UART
+ */
+
+
+static TickType_t tiempoPulsacion[5];
+
+void manejadorEventoUART (Evento_t * evn) {
+
+  uint8_t buf[PRT_BYTES_INFORME_TECLA];
+  int tecla;
+  token_t tokenR, token;
+  int largoBuf;
+
+  switch(evn->signal){
+
+  case SIG_MODULO_INICIAR:
+   break;
+
+  case SIG_BOTON_PULSADO:
+   tecla = evn->valor;
+   tiempoPulsacion[tecla] = xTaskGetTickCount();
+
+   break;
+
+  case SIG_BOTON_LIBERADO:
+
+   tecla = evn->valor;
+   largoBuf = armarPaqueteInformeTecla(buf, tiempoPulsacion[tecla], tecla);
+
+   token.payload = buf;
+   token.largo_del_paquete = largoBuf;
+   token.id_de_paquete = 0xFFFFFFFF;
+
+   tokenR.id_de_paquete = 0x00000000;
+   xQueueSend(uartPC.queTransmision, &token, portMAX_DELAY);
+   while(tokenR.id_de_paquete != token.id_de_paquete) {
+     xQueuePeek(uartPC.queTokenACT, &tokenR, portMAX_DELAY);
+   }
+   // cuando salí, es porque el token es para mí
+   xQueueReceive(uartPC.queTokenACT, &tokenR, portMAX_DELAY);
+
+   break;
+
+  default:
+    break;
+  }
+
+  return;
+}
+
+/**
+ * @fn uint8_t armarPaqueteInformeTecla (uint8_t*buf, TickType_t tiempoPulsacion, int tecla)
+ *
+ * @brief arma paquete con tiempo de pulsación y tecla
+ *
+ */
+
+static uint8_t armarPaqueteInformeTecla (uint8_t*buf, TickType_t tiempoPulsacion, int tecla) {
+
+  uint8_t i;
+  informeBuf_t informeTecla;
+
+  informeTecla.informe.tecla = tecla;
+  informeTecla.informe.tPulsacion = tiempoPulsacion;
+
+  // copio encabezado del paquete
+  buf[PRT_STX_I] = PRT_STX;
+  buf[PRT_OP_I] = PRT_INF;
+  buf[PRT_TAM_I] = (uint8_t) PRT_BYTES_INFORME_TECLA;
+
+  for(i = 0; i < PRT_BYTES_INFORME_TECLA; i++)
+      buf[PRT_DAT_INI_I+i] = informeTecla.buf[i];
+
+  buf[PRT_DAT_INI_I + PRT_BYTES_INFORME_TECLA] = PRT_ETX;
+
+  return (PRT_BYTES_PROTCOLO + PRT_BYTES_INFORME_TECLA);
+
 }

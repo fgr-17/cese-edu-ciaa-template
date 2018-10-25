@@ -25,7 +25,8 @@ extern int32_t inicializarModulos (void);
 /* --------------------- vars externas -------------------------- */
 
 extern Modulo_t * ModuloBroadcast;
-extern Modulo_t * ModuloLedTec1;
+extern Modulo_t * moduloLedTec;
 extern Modulo_t * moduloTec;
+extern Modulo_t * moduloInformePulsacion;
 
 #endif /* RTOS2_PRACTICA03_INC_MANEJOEVENTOS_H_ */

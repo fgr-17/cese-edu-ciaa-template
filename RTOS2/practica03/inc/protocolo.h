@@ -20,7 +20,7 @@
 #ifndef PROTOCOLO_DEBUG
   #define PRT_STX             0x55
   #define PRT_ETX             0xAA
-  typedef enum {PRT_MAYUS,PRT_MINUS, PRT_REPSTACK, PRT_REPHEAP, PRT_MSJEST, PRT_PERF} op_t;
+  typedef enum {PRT_MAYUS,PRT_MINUS, PRT_REPSTACK, PRT_REPHEAP, PRT_MSJEST, PRT_PERF, PRT_INF} op_t;
 #else
   typedef enum {PRT_MAYUS = 'q', PRT_MINUS = 'w', PRT_REPSTACK = 'e', PRT_REPHEAP = 'r', PRT_MSJEST = 't'} op_t;
   #define PRT_STX             'a'
@@ -163,6 +163,26 @@ typedef struct {
   estadoColaPool_t estadoColaCeldaPool;
 } colaCeldaPool_t;
 
+
+/**
+ * @brief estructura para el informe de tiempos de pulsación y tecla
+ */
+typedef struct {
+  TickType_t tPulsacion;
+  int tecla;
+}informe_t;
+
+#define PRT_BYTES_INFORME_TECLA         sizeof(informe_t)
+
+/**
+ * @brief paso valores de informe a buffer
+ */
+typedef union {
+  informe_t informe;
+  uint8_t buf[sizeof(informe_t)];
+}informeBuf_t;
+
+
 /* ---------------------------- funciones externas --------------------------------- */
 
 extern int32_t inicializarRecibirPaquete (void);
@@ -177,6 +197,7 @@ extern uint32_t liberarPoolMasAntiguo (void);
 
 extern int32_t inicializarTimer(void);
 extern void timerCallback (void*callbackParam);
+extern void manejadorEventoUART (Evento_t * evn);
 
 /* ---------------------------- variables globales --------------------------------- */
 extern QueueHandle_t queTransmision;

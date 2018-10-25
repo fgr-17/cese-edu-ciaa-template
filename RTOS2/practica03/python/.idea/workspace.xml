@@ -1,7 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="ca83680c-3d50-4f80-af73-abcc7da61c8d" name="Default Changelist" comment="" />
+    <list default="true" id="ca83680c-3d50-4f80-af73-abcc7da61c8d" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/../../practica02/python/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../practica02/python/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../inc/antirreb.h" beforeDir="false" afterPath="$PROJECT_DIR$/../inc/antirreb.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../inc/led.h" beforeDir="false" afterPath="$PROJECT_DIR$/../inc/led.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../inc/manejoEventos.h" beforeDir="false" afterPath="$PROJECT_DIR$/../inc/manejoEventos.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../inc/protocolo.h" beforeDir="false" afterPath="$PROJECT_DIR$/../inc/protocolo.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/enviar_texto.py" beforeDir="false" afterPath="$PROJECT_DIR$/enviar_texto.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/antirreb.c" beforeDir="false" afterPath="$PROJECT_DIR$/../src/antirreb.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/freeRTOS_blinky.c" beforeDir="false" afterPath="$PROJECT_DIR$/../src/freeRTOS_blinky.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/led.c" beforeDir="false" afterPath="$PROJECT_DIR$/../src/led.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/manejoEventos.c" beforeDir="false" afterPath="$PROJECT_DIR$/../src/manejoEventos.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/protocolo.c" beforeDir="false" afterPath="$PROJECT_DIR$/../src/protocolo.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/uart.c" beforeDir="false" afterPath="$PROJECT_DIR$/../src/uart.c" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -42,14 +56,38 @@
         </counts>
       </usages-collector>
     </session>
+    <session id="-271805843">
+      <usages-collector id="statistics.lifecycle.project">
+        <counts>
+          <entry key="project.open.time.1" value="1" />
+          <entry key="project.opened" value="1" />
+        </counts>
+      </usages-collector>
+      <usages-collector id="statistics.file.extensions.edit">
+        <counts>
+          <entry key="py" value="171" />
+        </counts>
+      </usages-collector>
+      <usages-collector id="statistics.file.types.edit">
+        <counts>
+          <entry key="Python" value="171" />
+        </counts>
+      </usages-collector>
+      <usages-collector id="statistics.file.extensions.open" />
+      <usages-collector id="statistics.vcs.git.usages" />
+      <usages-collector id="statistics.file.types.open" />
+    </session>
   </component>
   <component name="FileEditorManager">
-    <leaf>
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/enviar_texto.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="92">
-              <caret line="166" column="7" lean-forward="true" selection-start-line="166" selection-start-column="7" selection-end-line="166" selection-end-column="7" />
+            <state relative-caret-position="338">
+              <caret line="172" column="22" selection-start-line="172" selection-start-column="22" selection-end-line="172" selection-end-column="22" />
+              <folding>
+                <marker date="1540473955388" expanded="true" signature="5346:6185" ph="..." />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -58,7 +96,7 @@
         <entry file="file://$PROJECT_DIR$/archivo1.txt">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="30">
-              <caret line="2" column="4" lean-forward="true" selection-start-line="2" selection-start-column="4" selection-end-line="2" selection-end-column="4" />
+              <caret line="2" column="4" selection-start-line="2" selection-start-column="4" selection-end-line="2" selection-end-column="4" />
             </state>
           </provider>
         </entry>
@@ -71,14 +109,14 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/enviar_texto.py" />
         <option value="$PROJECT_DIR$/archivo1.txt" />
+        <option value="$PROJECT_DIR$/enviar_texto.py" />
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="5">
-    <option name="width" value="682" />
-    <option name="height" value="740" />
+  <component name="ProjectFrameBounds" extendedState="4">
+    <option name="width" value="1078" />
+    <option name="height" value="1080" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
@@ -86,7 +124,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -98,10 +135,11 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/enviar_texto.py" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -173,28 +211,28 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="0" width="682" height="740" extended-state="5" />
+    <frame x="0" y="0" width="1078" height="1080" extended-state="4" />
     <editor active="true" />
     <layout>
-      <window_info id="Favorites" side_tool="true" />
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.2154088" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.13662791" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
-      <window_info anchor="bottom" id="Version Control" show_stripe_button="false" />
-      <window_info anchor="bottom" id="Python Console" />
-      <window_info anchor="bottom" id="Terminal" />
-      <window_info anchor="bottom" id="Event Log" side_tool="true" />
+      <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.6585366" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.39937106" />
+      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.499031" weight="0.43246073" />
+      <window_info active="true" anchor="bottom" id="Debug" order="3" visible="true" weight="0.39895287" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="right" id="R Packages" />
-      <window_info anchor="right" id="R Graphics" />
+      <window_info anchor="bottom" id="Version Control" order="7" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Terminal" order="8" />
+      <window_info anchor="bottom" id="Event Log" order="9" sideWeight="0.500969" side_tool="true" weight="0.16230367" />
+      <window_info anchor="bottom" id="Python Console" order="10" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="right" id="R Graphics" order="3" />
+      <window_info anchor="right" id="R Packages" order="4" />
     </layout>
   </component>
   <component name="VcsContentAnnotationSettings">
@@ -205,8 +243,8 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/enviar_texto.py</url>
-          <line>180</line>
-          <option name="timeStamp" value="1" />
+          <line>161</line>
+          <option name="timeStamp" value="3" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
@@ -263,17 +301,20 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/archivo1.txt">
+    <entry file="file://$PROJECT_DIR$/enviar_texto.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="30">
-          <caret line="2" column="4" lean-forward="true" selection-start-line="2" selection-start-column="4" selection-end-line="2" selection-end-column="4" />
+        <state relative-caret-position="338">
+          <caret line="172" column="22" selection-start-line="172" selection-start-column="22" selection-end-line="172" selection-end-column="22" />
+          <folding>
+            <marker date="1540473955388" expanded="true" signature="5346:6185" ph="..." />
+          </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/enviar_texto.py">
+    <entry file="file://$PROJECT_DIR$/archivo1.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="92">
-          <caret line="166" column="7" lean-forward="true" selection-start-line="166" selection-start-column="7" selection-end-line="166" selection-end-column="7" />
+        <state relative-caret-position="30">
+          <caret line="2" column="4" selection-start-line="2" selection-start-column="4" selection-end-line="2" selection-end-column="4" />
         </state>
       </provider>
     </entry>

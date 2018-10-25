@@ -17,6 +17,10 @@
 #include "semphr.h"
 
 #include "sapi.h"        // <= Biblioteca sAPI
+
+#include "FrameworkEventos.h"
+
+
 #include "uart.h"
 #include "qmpool.h"
 #include "protocolo.h"

@@ -51,43 +51,14 @@ int inicializarQueuesFlancosyTeclas ( void ) {
 
 
 /**
- * @fn void tareaAntirreboteTeclas (void)
- *
- * @brief tarea que atiende la rutina antirrebote de todas las teclas
- */
-
-void tareaAntirreboteTEC1 ( void* taskParmPtr ) {
-
-  inicializarAntirreboteMEF(&antirreb_tecla1, TEC1);
-  while ( TRUE ) {
-      antirreboteMEF(&antirreb_tecla1);
-  }
-  return;
-}
-/**
- * @fn void tareaAntirreboteTEC2 (void)
- *
- * @brief tarea que atiende la rutina antirrebote de todas las teclas
- */
-
-void tareaAntirreboteTEC2 ( void* taskParmPtr ) {
-
-  inicializarAntirreboteMEF(&antirreb_tecla2, TEC2);
-  while ( TRUE ) {
-      antirreboteMEF(&antirreb_tecla2);
-  }
-  return;
-}
-
-
-/**
  * @fn void Inicializar_fsmAntirrebote (void)
  *
  * @brief inicializacion de la maquina de estados.
  */
 
-void inicializarAntirreboteMEF (antirreb_t*antirreb, gpioMap_t tecla_asigada ){
+void inicializarAntirreboteMEF (antirreb_t*antirreb, gpioMap_t tecla_asigada, int teclaN ){
 
+  antirreb->teclaN = teclaN;
 	antirreb->estado = BUTTON_UP;
 	antirreb->tiempoVentana = ANTIRREBOTE_DELAY;
 	antirreb->teclaPin = tecla_asigada;
@@ -132,7 +103,8 @@ void antirreboteMEF (antirreb_t*antirreb){
     }
     else if(tecValue == TECLA_ABAJO){
       antirreb->estado = BUTTON_DOWN;
-      EncolarEvento(ModuloLedTec1, SIG_BOTON_PULSADO, 1);
+      EncolarEvento(moduloInformePulsacion, SIG_BOTON_PULSADO, antirreb->teclaN);
+      EncolarEvento(moduloLedTec, SIG_BOTON_PULSADO, antirreb->teclaN);
     }
 		break;
 	case  BUTTON_DOWN:
@@ -145,7 +117,6 @@ void antirreboteMEF (antirreb_t*antirreb){
 
 	case BUTTON_RAISING:
 
-
 		/* Si el tiempo del delay expiró, paso a leer el estado del pin */
 			tecValue = gpioRead( antirreb->teclaPin );
 			if(tecValue == TECLA_ABAJO){
@@ -154,12 +125,13 @@ void antirreboteMEF (antirreb_t*antirreb){
 			else if(tecValue == TECLA_ARRIBA){
 
         antirreb->estado = BUTTON_UP;
-	      EncolarEvento(ModuloLedTec1, SIG_BOTON_LIBERADO, 1);
+        EncolarEvento(moduloInformePulsacion, SIG_BOTON_LIBERADO, antirreb->teclaN);
+	      EncolarEvento(moduloLedTec, SIG_BOTON_LIBERADO, antirreb->teclaN);
 			}
 		break;
 
 	default:
-		inicializarAntirreboteMEF(antirreb, antirreb->teclaPin);
+		inicializarAntirreboteMEF(antirreb, antirreb->teclaPin, antirreb->teclaN);
 
 	}
 
@@ -184,10 +156,16 @@ void manejadorEventosPulsador (Evento_t * evn){
   {
     case SIG_MODULO_INICIAR:
       timerArmarRepetitivo(moduloTec, 50);
-      inicializarAntirreboteMEF(&antirreb_tecla1, TEC1);
+      inicializarAntirreboteMEF(&antirreb_tecla1, TEC1, 1);
+      inicializarAntirreboteMEF(&antirreb_tecla2, TEC2, 2);
+      inicializarAntirreboteMEF(&antirreb_tecla3, TEC3, 3);
+      inicializarAntirreboteMEF(&antirreb_tecla4, TEC4, 4);
       break;
     case SIG_TIMEOUT:
       antirreboteMEF(&antirreb_tecla1);
+      antirreboteMEF(&antirreb_tecla2);
+      antirreboteMEF(&antirreb_tecla3);
+      antirreboteMEF(&antirreb_tecla4);
       break;
     default:
       break;

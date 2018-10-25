@@ -47,13 +47,13 @@
 
 #include "gpio.h"
 #include "uart.h"
-#include "protocolo.h"
+
 
 
 /* ---- include para manejo de framework basado por eventos ---- */
 #include "FrameworkEventos.h"
 #include "manejoEventos.h"
-
+#include "protocolo.h"
 #include "antirreb.h"
 
 /*==================[definiciones de datos externos]=========================*/
@@ -73,20 +73,21 @@ int main(void)
   inicializarColasEventos();
   inicializarModulos();
 
-  // inicializarTecla(); // todo
-  // inicializarQueuesFlancosyTeclas();
+  /* ----------- instalacion de tareas -------------- */
 
-/*
+  // manejo del protocolo
   xTaskCreate(tareaRecibirPaquete,(const char *)"recibopaq", configMINIMAL_STACK_SIZE, (void*) 0, tskIDLE_PRIORITY+3, 0);
 
+  // procesamiento de datos
   xTaskCreate(tareaMayusculizar,(const char *)"mayusculizar", configMINIMAL_STACK_SIZE, (void*) 0, tskIDLE_PRIORITY+2, 0);
   xTaskCreate(tareaMinusculizar,(const char *)"minusc", configMINIMAL_STACK_SIZE, (void*) 0, tskIDLE_PRIORITY+2, 0);
   xTaskCreate(tareaMedirPerformance,(const char *)"mperf", configMINIMAL_STACK_SIZE, (void*) 0, tskIDLE_PRIORITY+2, 0);
 
+  // salida de la uart
   xTaskCreate(tareaTransmisionUART,(const char *)"salidaUART", configMINIMAL_STACK_SIZE, (void*) 0, tskIDLE_PRIORITY+1, 0);
-*/
+
+  // SISTEMA REACTIVO:
   xTaskCreate(taskDespacharEventos, (const char*) "dispatcher", configMINIMAL_STACK_SIZE*5, (void*) queEventosBaja, tskIDLE_PRIORITY + 1, NULL);
-  // xTaskCreate(tareaAntirreboteTEC1, (const char*) "tecla1", configMINIMAL_STACK_SIZE, (void*)0, tskIDLE_PRIORITY + 1, NULL);
 
   // Iniciar scheduler
   vTaskStartScheduler();

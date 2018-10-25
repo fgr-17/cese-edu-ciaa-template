@@ -14,8 +14,12 @@
 
 
 #include "manejoEventos.h"
+
+#include "qmpool.h"
+
 #include "antirreb.h"
 #include "led.h"
+#include "protocolo.h"
 /* --------------------- prototipos -------------------------- */
 
 int32_t  inicializarColasEventos(void);
@@ -25,11 +29,9 @@ void manejadorEventoPruebaTout(Evento_t * evn);
 
 Modulo_t * ModuloBroadcast;
 Modulo_t * moduloTec;
-Modulo_t * ModuloLedTec1;
-Modulo_t * ModuloLedTec2;
-Modulo_t * ModuloLedTec3;
-Modulo_t * ModuloLedTec4;
+Modulo_t * moduloLedTec;
 Modulo_t * moduloLedPrueba;
+Modulo_t * moduloInformePulsacion;
 
 
 /* --------------------- funciones de inicializacion -------------------------- */
@@ -55,20 +57,16 @@ int32_t inicializarModulos (void) {
 
   ModuloBroadcast = RegistrarModulo(ManejadorEventosBroadcast, PRIORIDAD_BAJA);
   moduloTec = RegistrarModulo(manejadorEventosPulsador, PRIORIDAD_BAJA);
-  ModuloLedTec1 = RegistrarModulo(manejadorEventoLedTec1, PRIORIDAD_BAJA);
-  // moduloLedPrueba = RegistrarModulo(manejadorEventoPruebaTout, PRIORIDAD_BAJA);
-
-/*
-  ModuloLedTec2 = RegistrarModulo(ManejadorEventosBroadcast, PRIORIDAD_BAJA);
-  ModuloLedTec3 = RegistrarModulo(ManejadorEventosBroadcast, PRIORIDAD_BAJA);
-  ModuloLedTec4 = RegistrarModulo(ManejadorEventosBroadcast, PRIORIDAD_BAJA);
-*/
-
-
-
+  moduloLedTec = RegistrarModulo(manejadorEventoLed, PRIORIDAD_BAJA);
+  moduloInformePulsacion = RegistrarModulo( manejadorEventoUART, PRIORIDAD_BAJA);
   IniciarTodosLosModulos();
   return 0;
 }
+/**
+ * @fn void manejadorEventoPruebaTout(Evento_t * evn)
+ *
+ * @brief prueba blinky con sist. reactivo
+ */
 
 void manejadorEventoPruebaTout(Evento_t * evn) {
    switch(evn->signal){

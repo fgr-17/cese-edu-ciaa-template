@@ -20,8 +20,8 @@ typedef enum {
 
 /* ---------------------- proto. de funciones ---------------------------------- */
 
-extern int32_t inicializarManejadorEventoTec1 (void);
-extern void manejadorEventoLedTec1 (Evento_t * evn);
+extern int32_t inicializarManejadorEventoTec (void);
+extern void manejadorEventoLed (Evento_t * evn);
 
 
 /* ---------------------- variables globales ---------------------------------- */
