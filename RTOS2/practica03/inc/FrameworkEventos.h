@@ -11,11 +11,11 @@
 #include "FreeRTOS.h"
 #include "queue.h"
 
-#include "modulos.h"
-#include "eventos.h"
-#include "seniales.h"
-#include "broadcast.h"
-#include "TimerService.h"
+#include "fe_modulos.h"
+#include "fe_eventos.h"
+#include "fe_broadcast.h"
+#include "fe_seniales.h"
+#include "fe_TimerService.h"
 
 enum {
 	PRIORIDAD_BAJA = 1,

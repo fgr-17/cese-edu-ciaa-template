@@ -8,8 +8,8 @@
 #ifndef EVENTOS_H_
 #define EVENTOS_H_
 
-#include "modulos.h"
-#include "seniales.h"
+#include "fe_seniales.h"
+#include "fe_modulos.h"
 
 void taskDespacharEventos			      ( void * colaEventos );
 void EncolarEvento						      ( Modulo_t * receptor, Signal_t senial, int valor );

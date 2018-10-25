@@ -49,6 +49,13 @@
 #include "uart.h"
 #include "protocolo.h"
 
+
+/* ---- include para manejo de framework basado por eventos ---- */
+#include "FrameworkEventos.h"
+#include "manejoEventos.h"
+
+#include "antirreb.h"
+
 /*==================[definiciones de datos externos]=========================*/
 
 
@@ -57,41 +64,42 @@
 // FUNCION PRINCIPAL, PUNTO DE ENTRADA AL PROGRAMA LUEGO DE ENCENDIDO O RESET.
 int main(void)
 {
+
+  boardConfig();
   inicializarTareaEnviarDatosUARTs();
   inicializarRecibirPaquete();
   inicializarTimer();
 
-//
-//   xTaskCreate(
-//       tareaEnviarDatosUART,                      // Funcion de la tarea a ejecutar
-//      (const char *)"UART_PC",                    // Nombre de la tarea como String amigable para el usuario
-//      configMINIMAL_STACK_SIZE*2,                 // Cantidad de stack de la tarea
-//      (void*) &uartPC,                            // Parametros de tarea
-//      tskIDLE_PRIORITY+2,                         // Prioridad de la tarea
-//      0                                           // Puntero a la tarea creada en el sistema
-//   );
+  inicializarColasEventos();
+  inicializarModulos();
 
-   xTaskCreate(tareaRecibirPaquete,(const char *)"recibopaq", configMINIMAL_STACK_SIZE, (void*) 0, tskIDLE_PRIORITY+3, 0);
+  // inicializarTecla(); // todo
+  // inicializarQueuesFlancosyTeclas();
 
-   xTaskCreate(tareaMayusculizar,(const char *)"mayusculizar", configMINIMAL_STACK_SIZE, (void*) 0, tskIDLE_PRIORITY+2, 0);
-   xTaskCreate(tareaMinusculizar,(const char *)"minusc", configMINIMAL_STACK_SIZE, (void*) 0, tskIDLE_PRIORITY+2, 0);
-   xTaskCreate(tareaMedirPerformance,(const char *)"mperf", configMINIMAL_STACK_SIZE, (void*) 0, tskIDLE_PRIORITY+2, 0);
+/*
+  xTaskCreate(tareaRecibirPaquete,(const char *)"recibopaq", configMINIMAL_STACK_SIZE, (void*) 0, tskIDLE_PRIORITY+3, 0);
 
-   xTaskCreate(tareaTransmisionUART,(const char *)"salidaUART", configMINIMAL_STACK_SIZE, (void*) 0, tskIDLE_PRIORITY+4, 0);
+  xTaskCreate(tareaMayusculizar,(const char *)"mayusculizar", configMINIMAL_STACK_SIZE, (void*) 0, tskIDLE_PRIORITY+2, 0);
+  xTaskCreate(tareaMinusculizar,(const char *)"minusc", configMINIMAL_STACK_SIZE, (void*) 0, tskIDLE_PRIORITY+2, 0);
+  xTaskCreate(tareaMedirPerformance,(const char *)"mperf", configMINIMAL_STACK_SIZE, (void*) 0, tskIDLE_PRIORITY+2, 0);
 
+  xTaskCreate(tareaTransmisionUART,(const char *)"salidaUART", configMINIMAL_STACK_SIZE, (void*) 0, tskIDLE_PRIORITY+1, 0);
+*/
+  xTaskCreate(taskDespacharEventos, (const char*) "dispatcher", configMINIMAL_STACK_SIZE*5, (void*) queEventosBaja, tskIDLE_PRIORITY + 1, NULL);
+  // xTaskCreate(tareaAntirreboteTEC1, (const char*) "tecla1", configMINIMAL_STACK_SIZE, (void*)0, tskIDLE_PRIORITY + 1, NULL);
 
-   // Iniciar scheduler
-   vTaskStartScheduler();
+  // Iniciar scheduler
+  vTaskStartScheduler();
 
-   // ---------- REPETIR POR SIEMPRE --------------------------
-   while( TRUE ) {
-      // Si cae en este while 1 significa que no pudo iniciar el scheduler
-   }
+  // ---------- REPETIR POR SIEMPRE --------------------------
+  while( TRUE ) {
+    // Si cae en este while 1 significa que no pudo iniciar el scheduler
+  }
 
-   // NO DEBE LLEGAR NUNCA AQUI, debido a que a este programa se ejecuta
-   // directamenteno sobre un microcontroladore y no es llamado por ningun
-   // Sistema Operativo, como en el caso de un programa para PC.
-   return 0;
+  // NO DEBE LLEGAR NUNCA AQUI, debido a que a este programa se ejecuta
+  // directamenteno sobre un microcontroladore y no es llamado por ningun
+  // Sistema Operativo, como en el caso de un programa para PC.
+  return 0;
 }
 
 /*==================[fin del archivo]========================================*/

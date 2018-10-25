@@ -20,7 +20,7 @@ struct Modulo_t {
 	fsm_ptr	manejadorEventos;
 	int		prioridad;
 	int		timeout_tick;
-	int 		periodo;
+	int 	periodo;
 };
 
 struct Evento_t {

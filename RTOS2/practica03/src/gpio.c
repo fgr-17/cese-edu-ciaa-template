@@ -9,13 +9,12 @@
 /*
 */
 // Includes de FreeRTOS
-
-
 #include "FreeRTOS.h"
 #include "task.h"
 #include "semphr.h"
 
 #include "sapi.h"        // <= Biblioteca sAPI
+
 #include "gpio.h"
 
 DEBUG_PRINT_ENABLE;
@@ -112,16 +111,16 @@ void GPIO0_IRQHandler(void) {
 
   tecQueue_t itemQueue;
 
-  itemQueue.teclaPresionada = TEC1;
-  itemQueue.tickEvento = xTaskGetTickCountFromISR();
+  // itemQueue.teclaPresionada = TEC1;
+  // itemQueue.tickEvento = xTaskGetTickCountFromISR();
 
   if ( Chip_PININT_GetFallStates(LPC_GPIO_PIN_INT) & PININTCH(TECLA1_CANAL_DESC) ) {
 
-      itemQueue.flancoDetectado = FLANCO_BAJADA;
+      // itemQueue.flancoDetectado = FLANCO_BAJADA;
       Chip_PININT_ClearFallStates(LPC_GPIO_PIN_INT,PININTCH(TECLA1_CANAL_DESC));
    }
   else {
-      itemQueue.flancoDetectado = FLANCO_SUBIDA;
+      // itemQueue.flancoDetectado = FLANCO_SUBIDA;
       Chip_PININT_ClearRiseStates(LPC_GPIO_PIN_INT,PININTCH(TECLA1_CANAL_ASC));
   }
 

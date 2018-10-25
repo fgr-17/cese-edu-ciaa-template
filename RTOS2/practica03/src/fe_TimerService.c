@@ -34,40 +34,41 @@ void 		vApplicationTickHook 		( void )
 			}
 		}
 	}
+
 	portEND_SWITCHING_ISR(cambiarCtx);
 }
 
 void timerArmarUnico			( Modulo_t * modulo, unsigned int timeout )
 {
-	portENTER_CRITICAL();
+//	portENTER_CRITICAL();
 	modulo->timeout_tick = timeout;
 	modulo->periodo 		= TIMER_DISABLED;
-	portEXIT_CRITICAL();
+//	portEXIT_CRITICAL();
 	return;
 }
 
 void timerArmarRepetitivo	( Modulo_t * modulo, unsigned int timeout )
 {
-	portENTER_CRITICAL();
+//	portENTER_CRITICAL();
 	modulo->periodo 		= timeout;
 	modulo->timeout_tick = modulo->periodo;
-	portEXIT_CRITICAL();
+//	portEXIT_CRITICAL();
 	return;
 }
 
 void timerRecargar			( Modulo_t * modulo )
 {
-	portENTER_CRITICAL();
+//	portENTER_CRITICAL();
 	modulo->timeout_tick	= modulo->periodo;
-	portEXIT_CRITICAL();
+//	portEXIT_CRITICAL();
 	return;
 }
 
 void timerDesarmar			( Modulo_t * modulo )
 {
-	portENTER_CRITICAL();
+//	portENTER_CRITICAL();
 	modulo->timeout_tick = TIMER_DISABLED;
-	portEXIT_CRITICAL();
+//	portEXIT_CRITICAL();
 	return;
 }
 

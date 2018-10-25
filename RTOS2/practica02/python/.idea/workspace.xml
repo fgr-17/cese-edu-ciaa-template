@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="ca83680c-3d50-4f80-af73-abcc7da61c8d" name="Default Changelist" comment="" />
+    <list default="true" id="ca83680c-3d50-4f80-af73-abcc7da61c8d" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/../../practica03/src/gpio.c" beforeDir="false" afterPath="$PROJECT_DIR$/../../practica03/src/gpio.c" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -77,8 +79,8 @@
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="5">
-    <option name="width" value="682" />
-    <option name="height" value="740" />
+    <option name="width" value="959" />
+    <option name="height" value="1079" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
@@ -173,11 +175,11 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="0" width="682" height="740" extended-state="5" />
+    <frame x="0" y="0" width="959" height="1079" extended-state="5" />
     <editor active="true" />
     <layout>
       <window_info id="Favorites" side_tool="true" />
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.2154088" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.15005477" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Version Control" show_stripe_button="false" />
       <window_info anchor="bottom" id="Python Console" />
@@ -185,7 +187,7 @@
       <window_info anchor="bottom" id="Event Log" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.6585366" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.4245283" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.39937106" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
